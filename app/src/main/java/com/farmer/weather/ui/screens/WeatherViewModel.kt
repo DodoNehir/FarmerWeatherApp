@@ -15,8 +15,8 @@ import com.farmer.weather.data.remote.ApiResult
 import com.farmer.weather.data.remote.RemoteRepository
 import com.farmer.weather.domain.ShortTermForecast
 import kotlinx.coroutines.launch
-import java.io.IOException
-import retrofit2.HttpException
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 
 sealed interface WeatherUiState {
@@ -46,10 +46,18 @@ class WeatherViewModel(
 
     fun fetchWeatherData() {
 
+        val now = LocalDateTime.now()
+
+        val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+        val formattedDate = now.format(dateFormatter)
+
+        val timeFormatter = DateTimeFormatter.ofPattern("HH")
+        val formattedTime = "${now.minusHours(1L).format(timeFormatter)}00"
+
         viewModelScope.launch {
             val result = remoteRepository.getShortTermForecast(
-                baseDate = "20250703",
-                baseTime = "1600"
+                baseDate = formattedDate,
+                baseTime = formattedTime
             )
 
             when (result) {

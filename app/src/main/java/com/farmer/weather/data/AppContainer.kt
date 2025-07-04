@@ -34,8 +34,13 @@ class WeatherContainer(private val context: Context) : AppContainer {
         .addInterceptor(logging)
         .build()
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+        prettyPrint = true
+    }
+
     private val retrofit = Retrofit.Builder()
-        .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
+        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
         .baseUrl(baseUrl)
         .client(okHttpClient)
         .build()
