@@ -23,7 +23,6 @@ fun WeatherApp() {
             HomeScreen(
                 weatherUiState = weatherViewModel.weatherUiState,
                 contentPadding = innerPadding,
-
             )
         }
     }

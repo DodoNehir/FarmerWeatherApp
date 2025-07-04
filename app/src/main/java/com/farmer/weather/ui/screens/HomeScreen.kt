@@ -3,9 +3,12 @@ package com.farmer.weather.ui.screens
 import android.R.attr.data
 import android.util.Log.w
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,10 +18,14 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.farmer.weather.R
 import com.farmer.weather.domain.ShortTermForecast
 
@@ -34,9 +41,17 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        is WeatherUiState.NoData -> ErrorScreen()
-        is WeatherUiState.Error -> ErrorScreen()
-        is WeatherUiState.Loading -> LoadingScreen()
+        is WeatherUiState.NoData -> NoDataScreen(
+            modifier = Modifier.fillMaxSize()
+        )
+
+        is WeatherUiState.Error -> ErrorScreen(
+            modifier = Modifier.fillMaxSize()
+        )
+
+        is WeatherUiState.Loading -> LoadingScreen(
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 
@@ -54,7 +69,6 @@ fun WeatherInfoScreen(
                 weather = item,
                 modifier = modifier
                     .padding(4.dp)
-                    .fillMaxWidth()
                     .aspectRatio(1.5f)
             )
 
@@ -77,25 +91,54 @@ fun WeatherCard(
 
 }
 
-@Preview
 @Composable
 fun LoadingScreen(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(R.drawable.loading),
         contentDescription = null,
-        modifier = Modifier
-            .fillMaxWidth()
-            .size(200.dp)
+        modifier = modifier
+            .size(100.dp)
     )
 }
 
+@Preview(showBackground = true)
 @Composable
 fun ErrorScreen(modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(R.drawable.cancel),
-        contentDescription = null,
-        modifier = Modifier
-            .fillMaxWidth()
-            .size(200.dp)
-    )
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(R.drawable.cancel),
+            contentDescription = null,
+            modifier = Modifier.size(100.dp)
+        )
+        Text(
+            text = stringResource(R.string.error),
+            fontSize = 20.sp,
+            modifier = Modifier.padding(16.dp)
+        )
+
+    }
+}
+
+@Composable
+fun NoDataScreen(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(R.drawable.nodata),
+            contentDescription = null,
+            modifier = Modifier.size(100.dp)
+        )
+        Text(
+            text = stringResource(R.string.no_data),
+            modifier = Modifier.padding(16.dp)
+        )
+
+    }
 }
