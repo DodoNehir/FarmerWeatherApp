@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,18 +64,11 @@ fun WeatherInfoScreen(
     data: List<ShortTermForecast>,
     modifier: Modifier = Modifier
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 100.dp),
-        modifier = Modifier.padding(horizontal = 4.dp),
+    LazyColumn(
+        modifier = Modifier.padding(16.dp)
     ) {
         items(items = data) { item ->
-            WeatherCard(
-                weather = item,
-                modifier = modifier
-                    .padding(4.dp)
-                    .aspectRatio(1.5f)
-            )
-
+            WeatherCard(weather = item)
         }
     }
 }
@@ -92,6 +88,7 @@ fun WeatherCard(
 
 }
 
+@Preview(showBackground = true)
 @Composable
 fun LoadingScreen(modifier: Modifier = Modifier) {
     Image(
@@ -102,7 +99,7 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
     )
 }
 
-@Preview(showBackground = true)
+
 @Composable
 fun ErrorScreen(modifier: Modifier = Modifier) {
     Column(
@@ -138,6 +135,7 @@ fun NoDataScreen(modifier: Modifier = Modifier) {
         )
         Text(
             text = stringResource(R.string.no_data),
+            textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(16.dp)
         )

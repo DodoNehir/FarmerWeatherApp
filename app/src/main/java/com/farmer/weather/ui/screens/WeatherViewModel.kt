@@ -25,7 +25,7 @@ sealed interface WeatherUiState {
 
     object NoData : WeatherUiState
 
-    data class Error(val message: String) : WeatherUiState
+    object Error : WeatherUiState
 
     object Loading : WeatherUiState
 }
@@ -35,7 +35,7 @@ class WeatherViewModel(
     private val remoteRepository: RemoteRepository
 ) : ViewModel() {
 
-    val TAG = "WeatherViewModel"
+    val TAG = javaClass.simpleName
 
     var weatherUiState: WeatherUiState by mutableStateOf(WeatherUiState.Loading)
         private set
@@ -60,20 +60,20 @@ class WeatherViewModel(
                 baseTime = formattedTime
             )
 
+            Log.i(TAG, "result TAG: ${result.TAG}")
+
             when (result) {
                 is ApiResult.Success -> {
                     weatherUiState = WeatherUiState.Success(result.value)
-                    Log.i(TAG, "Success")
                 }
 
                 is ApiResult.NoData -> {
                     weatherUiState = WeatherUiState.NoData
-                    Log.i(TAG, "NoData")
                 }
 
                 is ApiResult.Error -> {
-                    Log.i(TAG, "Error")
-                    weatherUiState = WeatherUiState.Error(result.message ?: "데이터를 가져오지 못했습니다.")
+                    weatherUiState = WeatherUiState.Error
+                    Log.e(TAG, "error code: ${result.code} / message: ${result.message} / exception: ${result.exception}")
                 }
             }
         }

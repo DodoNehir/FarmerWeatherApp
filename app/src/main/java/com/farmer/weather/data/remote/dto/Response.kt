@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Response(
     val header: Header,
-    val body: Body?
+    val body: Body? = null
 )
