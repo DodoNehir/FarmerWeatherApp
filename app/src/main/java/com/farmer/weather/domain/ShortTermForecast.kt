@@ -5,11 +5,12 @@ data class ShortTermForecast(
     val baseTime: String,
     val fcstDate: String,
     val fcstTime: String,
-    val temperature: Int,
-    val windSpeed: Int,
-    val rainfall: String,
-    val skyStatus: String,
-    val minTemperature: Int,
-    val maxTemperature: Int,
-    val precipitationType: Int
+    val pop: Int?, // 강수 확률
+    val precipitationType: Int?,
+    val pcp: String?, // 1시간 강수량
+    val skyStatus: Int?,
+    val temperature: Int?,
+    val minTemperature: Int?,
+    val maxTemperature: Int?,
+    val windSpeed: Int?,
 )
