@@ -136,23 +136,23 @@ fun getWeatherIcon(pType: Int?, skyStatus: Int?): Painter {
      * skyStatus 하늘 상태 : 맑음(1), 구름많음(3), 흐림(4)
      */
     return when (pType) {
-        1 -> painterResource(R.drawable.rainy3d)
-        2 -> painterResource(R.drawable.rainsnow)
-        3 -> painterResource(R.drawable.snowflake)
-        4 -> painterResource(R.drawable.sonagi)
+        1 -> painterResource(R.drawable.rain)
+        2 -> painterResource(R.drawable.sleet)
+        3 -> painterResource(R.drawable.snow)
+        4 -> painterResource(R.drawable.showers)
         0 -> when (skyStatus) {
-            1 -> painterResource(R.drawable.sunny3d)
-            3 -> painterResource(R.drawable.sun)
-            4 -> painterResource(R.drawable.cloud)
+            1 -> painterResource(R.drawable.clear)
+            3 -> painterResource(R.drawable.cloudy)
+            4 -> painterResource(R.drawable.overcast)
             else -> {
                 Log.e("getWeatherIcon", "pType = 0 이지만 skyStatus 에러")
-                painterResource(R.drawable.sun)
+                painterResource(R.drawable.cloudy)
             }
         }
 
         else -> {
             Log.e("getWeatherIcon", "pType 에러")
-            painterResource(R.drawable.sun)
+            painterResource(R.drawable.cloudy)
         }
     }
 
