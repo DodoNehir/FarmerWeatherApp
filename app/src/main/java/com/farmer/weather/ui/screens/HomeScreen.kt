@@ -39,19 +39,26 @@ fun HomeScreen(
     when (weatherUiState) {
         is WeatherUiState.Success -> WeatherInfoScreen(
             data = weatherUiState.data,
+            contentPadding = contentPadding,
             modifier = Modifier.fillMaxWidth()
         )
 
         is WeatherUiState.NoData -> NoDataScreen(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
         )
 
         is WeatherUiState.Error -> ErrorScreen(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
         )
 
         is WeatherUiState.Loading -> LoadingScreen(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding)
         )
     }
 }
@@ -59,10 +66,12 @@ fun HomeScreen(
 @Composable
 fun WeatherInfoScreen(
     data: List<ShortTermForecast>,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
-        modifier = Modifier.padding(8.dp)
+        modifier = modifier.padding(contentPadding),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
     ) {
         items(items = data) { item ->
             WeatherCard(weather = item)
@@ -76,18 +85,19 @@ fun WeatherCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Row(
             modifier = Modifier
-                .padding(4.dp)
+                .padding(horizontal = 16.dp, vertical = 4.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = getTimeString(weather.fcstTime),
                 style = MaterialTheme.typography.bodyLarge,
@@ -123,7 +133,6 @@ fun WeatherCard(
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(modifier = Modifier.width(8.dp))
         }
     }
 
