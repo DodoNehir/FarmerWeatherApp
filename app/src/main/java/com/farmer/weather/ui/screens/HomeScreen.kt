@@ -1,71 +1,72 @@
 package com.farmer.weather.ui.screens
 
-import android.R.attr.data
-import android.util.Log.w
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.farmer.weather.R
 import com.farmer.weather.domain.ShortTermForecast
 
 @Composable
 fun HomeScreen(
+    modifier: Modifier = Modifier,
     weatherUiState: WeatherUiState,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    modifier: Modifier = Modifier,
 ) {
     when (weatherUiState) {
         is WeatherUiState.Success -> WeatherInfoScreen(
+            modifier = modifier,
             data = weatherUiState.data,
-            modifier = Modifier.fillMaxWidth()
+            contentPadding = contentPadding,
         )
 
         is WeatherUiState.NoData -> NoDataScreen(
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier.padding(contentPadding)
         )
 
         is WeatherUiState.Error -> ErrorScreen(
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier.padding(contentPadding)
         )
 
         is WeatherUiState.Loading -> LoadingScreen(
-            modifier = Modifier.fillMaxSize()
+            modifier = modifier.padding(contentPadding)
         )
     }
 }
 
 @Composable
 fun WeatherInfoScreen(
+    modifier: Modifier = Modifier,
     data: List<ShortTermForecast>,
-    modifier: Modifier = Modifier
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     LazyColumn(
-        modifier = Modifier.padding(16.dp)
+        modifier = modifier.padding(contentPadding),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
     ) {
         items(items = data) { item ->
             WeatherCard(weather = item)
@@ -78,25 +79,136 @@ fun WeatherCard(
     weather: ShortTermForecast,
     modifier: Modifier = Modifier
 ) {
-    Card(modifier = modifier) {
-        Column {
-            Text(text = "date: " + weather.fcstDate)
-            Text(text = "time: " + weather.fcstTime)
-            Text(text = "degree: " + weather.temperature)
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = getTimeString(weather.fcstTime),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.weight(1f))
+
+            // 비 올 때만 강수량과 강수확률 표시
+            if (weather.precipitationType in 1..4) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${weather.pcp} ",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = "${weather.pop} %",
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+            Image(
+                painter = getWeatherIcon(weather.precipitationType, weather.skyStatus),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "${weather.temperature}°C",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 
 }
 
+@Composable
+fun getWeatherIcon(pType: Int?, skyStatus: Int?): Painter {
+    /**
+     * precipitationType 강수 형태 : 없음(0), 비(1), 비/눈(2), 눈(3), 소나기(4)
+     * skyStatus 하늘 상태 : 맑음(1), 구름많음(3), 흐림(4)
+     */
+    return when (pType) {
+        1 -> painterResource(R.drawable.rain)
+        2 -> painterResource(R.drawable.sleet)
+        3 -> painterResource(R.drawable.snow)
+        4 -> painterResource(R.drawable.showers)
+        0 -> when (skyStatus) {
+            1 -> painterResource(R.drawable.clear)
+            3 -> painterResource(R.drawable.cloudy)
+            4 -> painterResource(R.drawable.overcast)
+            else -> {
+                Log.e("getWeatherIcon", "pType = 0 이지만 skyStatus 에러")
+                painterResource(R.drawable.cloudy)
+            }
+        }
+
+        else -> {
+            Log.e("getWeatherIcon", "pType 에러")
+            painterResource(R.drawable.cloudy)
+        }
+    }
+
+}
+
+fun getTimeString(fcstTime: String): String {
+    val time = fcstTime.substring(0, 2).toInt()
+    if (time == 12) {
+        return "오후 12시"
+    } else if (time == 0) {
+        return "오전 12시"
+    } else if (time > 12) {
+        return "오후 ${time - 12}시"
+    } else {
+        return "오전 ${time}시"
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
-fun LoadingScreen(modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(R.drawable.loading),
-        contentDescription = null,
-        modifier = modifier
-            .size(100.dp)
+fun WeatherCardPreview() {
+    val dummyShortTermForecast = ShortTermForecast(
+        baseDate = "20250705",
+        baseTime = "1500",
+        fcstDate = "20250705",
+        fcstTime = "1500",
+        pop = 60,
+        precipitationType = 1,
+        pcp = "16.3mm",
+        skyStatus = 1,
+        temperature = 36,
+        minTemperature = 25,
+        maxTemperature = 36,
+        windSpeed = 1,
     )
+
+    WeatherCard(weather = dummyShortTermForecast)
+}
+
+@Composable
+fun LoadingScreen(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(100.dp),
+            color = MaterialTheme.colorScheme.primary,
+            strokeWidth = 10.dp
+        )
+    }
 }
 
 
