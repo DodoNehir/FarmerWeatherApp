@@ -33,42 +33,36 @@ import com.farmer.weather.domain.ShortTermForecast
 
 @Composable
 fun HomeScreen(
+    modifier: Modifier = Modifier,
     weatherUiState: WeatherUiState,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    modifier: Modifier = Modifier,
 ) {
     when (weatherUiState) {
         is WeatherUiState.Success -> WeatherInfoScreen(
+            modifier = modifier,
             data = weatherUiState.data,
             contentPadding = contentPadding,
-            modifier = Modifier.fillMaxWidth()
         )
 
         is WeatherUiState.NoData -> NoDataScreen(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
+            modifier = modifier.padding(contentPadding)
         )
 
         is WeatherUiState.Error -> ErrorScreen(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
+            modifier = modifier.padding(contentPadding)
         )
 
         is WeatherUiState.Loading -> LoadingScreen(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding)
+            modifier = modifier.padding(contentPadding)
         )
     }
 }
 
 @Composable
 fun WeatherInfoScreen(
+    modifier: Modifier = Modifier,
     data: List<ShortTermForecast>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier.padding(contentPadding),

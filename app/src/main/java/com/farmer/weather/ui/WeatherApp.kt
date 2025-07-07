@@ -15,13 +15,16 @@ import com.farmer.weather.ui.screens.HomeScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WeatherApp() {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+//    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+//        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { innerPadding ->
-        Surface(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize()
+        ) {
             val weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModel.Factory)
             HomeScreen(
+                modifier = Modifier.fillMaxSize(),
                 weatherUiState = weatherViewModel.weatherUiState,
                 contentPadding = innerPadding,
             )
