@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +38,7 @@ fun HomeScreen(
     weatherUiState: WeatherUiState,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+    // TODO 날씨 데이터가 현재 시각 이전의 정보는 표시하지 않도록 수정하기
     when (weatherUiState) {
         is WeatherUiState.Success -> WeatherInfoScreen(
             modifier = modifier,
@@ -64,12 +66,79 @@ fun WeatherInfoScreen(
     data: List<ShortTermForecast>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    LazyColumn(
-        modifier = modifier.padding(contentPadding),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+    Column(
+        modifier = modifier.padding(contentPadding)
     ) {
-        items(items = data) { item ->
-            WeatherCard(weather = item)
+        CurrentHighlightCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp),
+            weather = data.first()
+        )
+
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+        ) {
+            items(items = data.drop(1)) { item ->
+                WeatherCard(weather = item)
+            }
+        }
+
+    }
+}
+
+@Composable
+fun CurrentHighlightCard(
+    modifier: Modifier = Modifier,
+    weather: ShortTermForecast
+) {
+    Card(
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.weight(1.5f)) {
+                // TODO 값이 null일 때 그냥 null 로 표기되는 문제
+                // TODO 지나간 시간들을 표시하지 않기 위해서 : DB에 우선 저장 후
+                //  불러올 때 현재 시간것부터 불러오도록 하면 될 것 같다.
+                Text(
+                    text = "${weather.temperature}°",
+                    style = MaterialTheme.typography.displayLarge
+                )
+                Text(
+                    text = getWeatherIconString(weather.precipitationType, weather.skyStatus),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                // TODO 최저기온은 당일 6시, 최고기온은 15시 예보에 있음
+                //  나중에 DB에 저장을 위해 당일 5시 발표 자료를 조회요청 해야 할 듯
+                //  5시 20분 이후에 하는 요청은 오늘 날짜 5시 발표 자료를 가져온다.
+                //  00시부터 5시 20분 사이에 UI를 그려야 한다면 그 전날의 5시 걸로 요청해서 가져와야 함
+                Text(
+                    text = "최고 ${weather.maxTemperature}° / 최저 ${weather.minTemperature}°"
+                )
+                Text(
+                    text = "강수확률 ${weather.pop}%  풍속 ${weather.windSpeed}m/s"
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // TODO lottie 이미지?? 날씨에 따라 움직이면 좋겠지만 지금은 3d image
+                Image(
+                    painter = getWeatherIcon(weather.precipitationType, weather.skyStatus),
+                    contentDescription = null,
+                    modifier = Modifier.size(100.dp)
+                )
+            }
         }
     }
 }
@@ -96,7 +165,6 @@ fun WeatherCard(
             Text(
                 text = getTimeString(weather.fcstTime),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.weight(1f))
 
@@ -126,11 +194,34 @@ fun WeatherCard(
             Text(
                 text = "${weather.temperature}°C",
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
 
+}
+
+@Composable
+fun getWeatherIconString(pType: Int?, skyStatus: Int?): String {
+    return when (pType) {
+        1 -> stringResource(R.string.rain)
+        2 -> stringResource(R.string.sleet)
+        3 -> stringResource(R.string.snow)
+        4 -> stringResource(R.string.showers)
+        0 -> when (skyStatus) {
+            1 -> stringResource(R.string.clear)
+            3 -> stringResource(R.string.cloudy)
+            4 -> stringResource(R.string.overcast)
+            else -> {
+                Log.e("getWeatherIconString", "pType = 0 이지만 skyStatus 에러")
+                " "
+            }
+        }
+
+        else -> {
+            Log.e("getWeatherIconString", "pType 에러")
+            " "
+        }
+    }
 }
 
 @Composable
@@ -190,10 +281,11 @@ fun WeatherCardPreview() {
         temperature = 36,
         minTemperature = 25,
         maxTemperature = 36,
-        windSpeed = 1,
+        windSpeed = 1.1,
     )
 
-    WeatherCard(weather = dummyShortTermForecast)
+//    WeatherCard(weather = dummyShortTermForecast)
+    CurrentHighlightCard(weather = dummyShortTermForecast)
 }
 
 @Composable

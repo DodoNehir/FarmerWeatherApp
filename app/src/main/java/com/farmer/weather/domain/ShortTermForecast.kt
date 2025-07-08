@@ -12,5 +12,5 @@ data class ShortTermForecast(
     val temperature: Int?,
     val minTemperature: Int?,
     val maxTemperature: Int?,
-    val windSpeed: Int?,
+    val windSpeed: Double?,
 )

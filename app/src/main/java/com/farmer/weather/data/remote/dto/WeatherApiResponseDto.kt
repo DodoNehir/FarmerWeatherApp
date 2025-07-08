@@ -39,7 +39,7 @@ fun WeatherApiResponseDto.toShortTermForecasts(): List<ShortTermForecast> {
             pop = categoryMap["POP"]?.fcstValue?.toIntOrNull(),
             // 강수 형태 : 없음(0), 비(1), 비/눈(2), 눈(3), 소나기(4)
             precipitationType = categoryMap["PTY"]?.fcstValue?.toIntOrNull(),
-            // 1시간 강수량: String으로 mm까지 표시해줌.(1mm 미만 / 6.9mm .. / 50.0mm 이상)
+            // 1시간 강수량: String으로 mm까지 표시해줌.(강수없음 / 1mm 미만 / 6.9mm .. / 50.0mm 이상)
             pcp = categoryMap["PCP"]?.fcstValue,
 
             // 하늘 상태 : 맑음(1), 구름많음(3), 흐림(4)
@@ -49,7 +49,7 @@ fun WeatherApiResponseDto.toShortTermForecasts(): List<ShortTermForecast> {
             minTemperature = categoryMap["TMN"]?.fcstValue?.toIntOrNull(),
             maxTemperature = categoryMap["TMX"]?.fcstValue?.toIntOrNull(),
 
-            windSpeed = categoryMap["WSD"]?.fcstValue?.toIntOrNull(),
+            windSpeed = categoryMap["WSD"]?.fcstValue?.toDoubleOrNull(),
         )
         forecasts.add(forecast)
     }
