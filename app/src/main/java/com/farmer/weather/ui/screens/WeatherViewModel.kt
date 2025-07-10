@@ -1,7 +1,6 @@
 package com.farmer.weather.ui.screens
 
 import android.util.Log
-import androidx.compose.material3.DatePickerDefaults.dateFormatter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,8 +11,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.farmer.weather.WeatherApplication
+import com.farmer.weather.data.local.DailyTemperatureEntity
+import com.farmer.weather.data.local.LocalRepository
 import com.farmer.weather.data.remote.ApiResult
 import com.farmer.weather.data.remote.RemoteRepository
+import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.ShortTermForecast
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -22,7 +24,10 @@ import java.time.format.DateTimeFormatter
 
 sealed interface WeatherUiState {
 
-    data class Success(val data: List<ShortTermForecast>) : WeatherUiState
+    data class Success(
+        val weatherList: List<ShortTermForecast>,
+        val dailyTemperatureDao: DailyTemperature
+    ) : WeatherUiState
 
     object NoData : WeatherUiState
 
@@ -33,6 +38,7 @@ sealed interface WeatherUiState {
 
 
 class WeatherViewModel(
+    private val localRepository: LocalRepository,
     private val remoteRepository: RemoteRepository
 ) : ViewModel() {
 
@@ -45,7 +51,28 @@ class WeatherViewModel(
     private val timeFormatter = DateTimeFormatter.ofPattern("HHmm")
 
     init {
-        fetchWeatherData()
+        loadDailyTemperature()
+    }
+
+    fun loadDailyTemperature() {
+        val now = LocalDateTime.now()
+        val today = now.format(dateFormatter)
+        val time = now.format(timeFormatter)
+
+
+        viewModelScope.launch {
+            val dailyTemperatureEntity = localRepository.getDailyTemperature(today)
+
+            if (dailyTemperatureEntity == null) {
+                Log.d(TAG, "local에 Daily Temperature 없음. API 호출 시작")
+
+
+
+            } else {
+                Log.d(TAG, "local 에서 Daily Temperature 발견: ${dailyTemperatureEntity}")
+            }
+        }
+
     }
 
     fun fetchWeatherData() {
@@ -62,7 +89,7 @@ class WeatherViewModel(
 
             when (result) {
                 is ApiResult.Success -> {
-                    weatherUiState = WeatherUiState.Success(result.value)
+//                    weatherUiState = WeatherUiState.Success(result.value)
                 }
 
                 is ApiResult.NoData -> {
@@ -114,8 +141,12 @@ class WeatherViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val application = (this[APPLICATION_KEY] as WeatherApplication)
+                val localRepository = application.container.localRepository
                 val remoteRepository = application.container.remoteRepository
-                WeatherViewModel(remoteRepository = remoteRepository)
+                WeatherViewModel(
+                    localRepository = localRepository,
+                    remoteRepository = remoteRepository
+                )
             }
         }
     }

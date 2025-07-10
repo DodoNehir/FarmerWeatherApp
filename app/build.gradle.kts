@@ -69,9 +69,7 @@ dependencies {
 
     //Room
     implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.compiler) {
-        exclude(group = "com.intellij", module = "annotations")
-    }
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
 
     // Retrofit

@@ -26,7 +26,7 @@ class WeatherContainer(private val context: Context) : AppContainer {
 
     private val baseUrl = Constants.BASE_URL
 
-    private val logging = HttpLoggingInterceptor().apply{
+    private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
@@ -55,6 +55,9 @@ class WeatherContainer(private val context: Context) : AppContainer {
     }
 
     override val localRepository: LocalRepository by lazy {
-        LocalRepositoryImpl(WeatherDatabase.getDatabase(context).weatherDao())
+        LocalRepositoryImpl(
+            WeatherDatabase.getDatabase(context).shortTermForecastDao(),
+            WeatherDatabase.getDatabase(context).dailyTemperatureDao()
+        )
     }
 }

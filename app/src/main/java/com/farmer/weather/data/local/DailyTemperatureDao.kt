@@ -16,5 +16,5 @@ interface DailyTemperatureDao {
     suspend fun deleteTemperature(oldDate: String)
 
     @Query(value = "SELECT * FROM daily_temperature WHERE fcstDate = :date")
-    fun getDailyTemperature(date: String): Flow<DailyTemperatureEntity?>
+    suspend fun getDailyTemperature(date: String): DailyTemperatureEntity?
 }

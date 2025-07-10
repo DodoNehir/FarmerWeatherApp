@@ -42,7 +42,7 @@ fun HomeScreen(
     when (weatherUiState) {
         is WeatherUiState.Success -> WeatherInfoScreen(
             modifier = modifier,
-            data = weatherUiState.data,
+            data = weatherUiState.weatherList,
             contentPadding = contentPadding,
         )
 

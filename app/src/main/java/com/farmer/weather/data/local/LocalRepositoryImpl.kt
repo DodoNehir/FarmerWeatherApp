@@ -23,7 +23,7 @@ class LocalRepositoryImpl(
     override suspend fun deleteDailyTemperature(oldDate: String) =
         dailyTemperatureDao.deleteTemperature(oldDate)
 
-    override fun getDailyTemperature(date: String): Flow<DailyTemperatureEntity?> =
+    override suspend fun getDailyTemperature(date: String): DailyTemperatureEntity? =
         dailyTemperatureDao.getDailyTemperature(date)
 
 }

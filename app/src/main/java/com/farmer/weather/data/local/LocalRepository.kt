@@ -11,6 +11,6 @@ interface LocalRepository {
     // Daily Temperature
     suspend fun insertDailyTemperature(dailyTemperature: DailyTemperatureEntity)
     suspend fun deleteDailyTemperature(oldDate: String)
-    fun getDailyTemperature(date: String): Flow<DailyTemperatureEntity?>
+    suspend fun getDailyTemperature(date: String): DailyTemperatureEntity?
 
 }
