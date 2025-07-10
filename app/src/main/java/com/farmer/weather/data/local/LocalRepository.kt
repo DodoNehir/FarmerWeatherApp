@@ -3,29 +3,14 @@ package com.farmer.weather.data.local
 import kotlinx.coroutines.flow.Flow
 
 interface LocalRepository {
-    suspend fun insertWeather(weatherEntity: WeatherEntity)
+    // Short Term Forecast
+    suspend fun insertShortTermForecasts(forecasts: List<ShortTermForecastEntity>)
+    suspend fun deleteShortTermForecasts(oldDate: String)
+    fun getAllShortTermForecasts(date: String): Flow<List<ShortTermForecastEntity>>
 
-    suspend fun updateWeather(weatherEntity: WeatherEntity)
+    // Daily Temperature
+    suspend fun insertDailyTemperature(dailyTemperature: DailyTemperatureEntity)
+    suspend fun deleteDailyTemperature(oldDate: String)
+    fun getDailyTemperature(date: String): Flow<DailyTemperatureEntity?>
 
-    suspend fun deleteWeather(weatherEntity: WeatherEntity)
-
-    fun getAllWeather(): Flow<List<WeatherEntity>>
-}
-
-class LocalRepositoryImpl(private val weatherDao: WeatherDao) : LocalRepository {
-    override suspend fun insertWeather(weatherEntity: WeatherEntity) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun updateWeather(weatherEntity: WeatherEntity) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun deleteWeather(weatherEntity: WeatherEntity) {
-        TODO("Not yet implemented")
-    }
-
-    override fun getAllWeather(): Flow<List<WeatherEntity>> {
-        TODO("Not yet implemented")
-    }
 }
