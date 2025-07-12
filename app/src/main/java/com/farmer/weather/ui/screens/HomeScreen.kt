@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.farmer.weather.R
+import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.ShortTermForecast
 
 @Composable
@@ -43,6 +44,7 @@ fun HomeScreen(
         is WeatherUiState.Success -> WeatherInfoScreen(
             modifier = modifier,
             data = weatherUiState.weatherList,
+            dailyTemp = weatherUiState.dailyTemperature,
             contentPadding = contentPadding,
         )
 
@@ -64,6 +66,7 @@ fun HomeScreen(
 fun WeatherInfoScreen(
     modifier: Modifier = Modifier,
     data: List<ShortTermForecast>,
+    dailyTemp: DailyTemperature,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     Column(
@@ -73,7 +76,8 @@ fun WeatherInfoScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp),
-            weather = data.first()
+            weather = data.first(),
+            dailyTemp = dailyTemp
         )
 
         LazyColumn(
@@ -91,7 +95,8 @@ fun WeatherInfoScreen(
 @Composable
 fun CurrentHighlightCard(
     modifier: Modifier = Modifier,
-    weather: ShortTermForecast
+    weather: ShortTermForecast,
+    dailyTemp: DailyTemperature
 ) {
     Card(
         modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -102,9 +107,6 @@ fun CurrentHighlightCard(
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.weight(1.5f)) {
-                // TODO 값이 null일 때 그냥 null 로 표기되는 문제
-                // TODO 지나간 시간들을 표시하지 않기 위해서 : DB에 우선 저장 후
-                //  불러올 때 현재 시간것부터 불러오도록 하면 될 것 같다.
                 Text(
                     text = "${weather.temperature}°",
                     style = MaterialTheme.typography.displayLarge
@@ -114,12 +116,8 @@ fun CurrentHighlightCard(
                     style = MaterialTheme.typography.titleLarge
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // TODO 최저기온은 당일 6시, 최고기온은 15시 예보에 있음
-                //  나중에 DB에 저장을 위해 당일 5시 발표 자료를 조회요청 해야 할 듯
-                //  5시 20분 이후에 하는 요청은 오늘 날짜 5시 발표 자료를 가져온다.
-                //  00시부터 5시 20분 사이에 UI를 그려야 한다면 그 전날의 5시 걸로 요청해서 가져와야 함
                 Text(
-                    text = "최고 ${weather.maxTemperature}° / 최저 ${weather.minTemperature}°"
+                    text = "최고 ${dailyTemp.maxTemperature}° / 최저 ${dailyTemp.minTemperature}°"
                 )
                 Text(
                     text = "강수확률 ${weather.pop}%  풍속 ${weather.windSpeed}m/s"
@@ -132,7 +130,7 @@ fun CurrentHighlightCard(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // TODO lottie 이미지?? 날씨에 따라 움직이면 좋겠지만 지금은 3d image
+                // TODO 날씨에 따라 움직이면 좋겠지만 지금은 3d image
                 Image(
                     painter = getWeatherIcon(weather.precipitationType, weather.skyStatus),
                     contentDescription = null,
@@ -279,13 +277,21 @@ fun WeatherCardPreview() {
         pcp = "16.3mm",
         skyStatus = 1,
         temperature = 36,
-        minTemperature = 25,
-        maxTemperature = 36,
+        minTemperature = null,
+        maxTemperature = null,
         windSpeed = 1.1,
+    )
+    val dummyDailyTemperature = DailyTemperature(
+        fcstDate = "20250705",
+        minTemperature = "25.0",
+        maxTemperature = "36.0"
     )
 
 //    WeatherCard(weather = dummyShortTermForecast)
-    CurrentHighlightCard(weather = dummyShortTermForecast)
+    CurrentHighlightCard(
+        weather = dummyShortTermForecast,
+        dailyTemp = dummyDailyTemperature
+    )
 }
 
 @Composable

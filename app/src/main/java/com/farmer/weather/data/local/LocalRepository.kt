@@ -6,7 +6,7 @@ interface LocalRepository {
     // Short Term Forecast
     suspend fun insertShortTermForecasts(forecasts: List<ShortTermForecastEntity>)
     suspend fun deleteShortTermForecasts(oldDate: String)
-    fun getAllShortTermForecasts(date: String): Flow<List<ShortTermForecastEntity>>
+    suspend fun getShortTermForecasts(date: String, time: String): List<ShortTermForecastEntity>
 
     // Daily Temperature
     suspend fun insertDailyTemperature(dailyTemperature: DailyTemperatureEntity)

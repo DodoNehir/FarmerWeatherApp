@@ -10,7 +10,7 @@ data class ShortTermForecast(
     val pcp: String?, // 1시간 강수량
     val skyStatus: Int?,
     val temperature: Int?,
-    val minTemperature: Int?,
-    val maxTemperature: Int?,
+    val minTemperature: String?,
+    val maxTemperature: String?,
     val windSpeed: Double?,
 )

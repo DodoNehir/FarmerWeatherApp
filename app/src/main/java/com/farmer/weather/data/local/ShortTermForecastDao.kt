@@ -17,6 +17,12 @@ interface ShortTermForecastDao {
     @Query(value = "DELETE FROM short_term_forecast WHERE fcstDate < :oldDate")
     suspend fun deleteShortTermForecasts(oldDate: String)
 
-    @Query(value = "SELECT * FROM short_term_forecast WHERE fcstDate = :date ORDER BY fcstTime ASC")
-    fun getAllShortTermForecasts(date : String) : Flow<List<ShortTermForecastEntity>>
+    @Query(value = """
+        SELECT * 
+        FROM short_term_forecast 
+        WHERE fcstDate >= :date AND (fcstTime >= :time OR fcstDate > :date) 
+        ORDER BY fcstDate, fcstTime ASC
+        LIMIT 28
+        """)
+    suspend fun getShortTermForecasts(date : String, time: String) : List<ShortTermForecastEntity>
 }

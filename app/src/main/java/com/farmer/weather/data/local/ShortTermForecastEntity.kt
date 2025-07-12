@@ -2,9 +2,12 @@ package com.farmer.weather.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.farmer.weather.domain.ShortTermForecast
 
-@Entity(tableName = "short_term_forecast",
-    primaryKeys = ["fcstDate", "fcstTime"])
+@Entity(
+    tableName = "short_term_forecast",
+    primaryKeys = ["fcstDate", "fcstTime"]
+)
 data class ShortTermForecastEntity(
     val baseDate: String,
     val baseTime: String,
@@ -19,8 +22,40 @@ data class ShortTermForecastEntity(
     val skyStatus: Int?,
 
     val temperature: Int?,
-    val minTemperature: Int?,
-    val maxTemperature: Int?,
+    val minTemperature: String?,
+    val maxTemperature: String?,
 
     val windSpeed: Double?,
 )
+
+fun ShortTermForecastEntity.toDomain(): ShortTermForecast =
+    ShortTermForecast(
+        baseDate = this.baseDate,
+        baseTime = this.baseTime,
+        fcstDate = this.fcstDate,
+        fcstTime = this.fcstTime,
+        pop = this.pop,
+        precipitationType = this.precipitationType,
+        pcp = this.pcp,
+        skyStatus = this.skyStatus,
+        temperature = this.temperature,
+        minTemperature = this.minTemperature,
+        maxTemperature = this.maxTemperature,
+        windSpeed = this.windSpeed
+    )
+
+fun ShortTermForecast.toEntity() : ShortTermForecastEntity =
+    ShortTermForecastEntity(
+        baseDate = this.baseDate,
+        baseTime = this.baseTime,
+        fcstDate = this.fcstDate,
+        fcstTime = this.fcstTime,
+        pop = this.pop,
+        precipitationType = this.precipitationType,
+        pcp = this.pcp,
+        skyStatus = this.skyStatus,
+        temperature = this.temperature,
+        minTemperature = this.minTemperature,
+        maxTemperature = this.maxTemperature,
+        windSpeed = this.windSpeed
+    )

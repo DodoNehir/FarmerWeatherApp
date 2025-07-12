@@ -11,8 +11,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.farmer.weather.WeatherApplication
-import com.farmer.weather.data.local.DailyTemperatureEntity
 import com.farmer.weather.data.local.LocalRepository
+import com.farmer.weather.data.local.toDomain
+import com.farmer.weather.data.local.toEntity
 import com.farmer.weather.data.remote.ApiResult
 import com.farmer.weather.data.remote.RemoteRepository
 import com.farmer.weather.domain.DailyTemperature
@@ -26,7 +27,7 @@ sealed interface WeatherUiState {
 
     data class Success(
         val weatherList: List<ShortTermForecast>,
-        val dailyTemperatureDao: DailyTemperature
+        val dailyTemperature: DailyTemperature
     ) : WeatherUiState
 
     object NoData : WeatherUiState
@@ -48,94 +49,132 @@ class WeatherViewModel(
         private set
 
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
-    private val timeFormatter = DateTimeFormatter.ofPattern("HHmm")
+    private val timeFormatter = DateTimeFormatter.ofPattern("HH00")
 
     init {
-        loadDailyTemperature()
+        loadData()
     }
 
-    fun loadDailyTemperature() {
-        val now = LocalDateTime.now()
-        val today = now.format(dateFormatter)
-        val time = now.format(timeFormatter)
-
-
+    fun loadData() {
         viewModelScope.launch {
-            val dailyTemperatureEntity = localRepository.getDailyTemperature(today)
+            val now = LocalDateTime.now()
+            val dailyTemperatureEntity =
+                localRepository.getDailyTemperature(now.format(dateFormatter))
 
             if (dailyTemperatureEntity == null) {
                 Log.d(TAG, "local에 Daily Temperature 없음. API 호출 시작")
 
+                val apiRequestResult = fetchWeatherData()
+
+                Log.i(TAG, "result TAG: ${apiRequestResult.TAG}")
+
+                when (apiRequestResult) {
+                    is ApiResult.Success -> {
+                        // api 결과를 로컬에 저장
+                        saveData(apiRequestResult.value)
+
+                        // 저장 값 불러오며 상태 업데이트
+                        val dailyTemperatureEntity =
+                            localRepository.getDailyTemperature(
+                                now.format(dateFormatter)
+                            )
+                        val shortTermForecastEntities =
+                            localRepository.getShortTermForecasts(
+                                now.format(dateFormatter),
+                                now.format(timeFormatter)
+                            )
+
+                        weatherUiState = WeatherUiState.Success(
+                            weatherList = shortTermForecastEntities.map { it.toDomain() },
+                            dailyTemperature = dailyTemperatureEntity!!.toDomain()
+                        )
+                    }
+
+                    is ApiResult.NoData -> {
+                        weatherUiState = WeatherUiState.NoData
+                    }
+
+                    is ApiResult.Error -> {
+                        weatherUiState = WeatherUiState.Error
+                        Log.e(
+                            TAG,
+                            "error code: ${apiRequestResult.code} / message: ${apiRequestResult.message} / exception: ${apiRequestResult.exception}"
+                        )
+                    }
+                }
 
 
             } else {
                 Log.d(TAG, "local 에서 Daily Temperature 발견: ${dailyTemperatureEntity}")
-            }
-        }
 
-    }
-
-    fun fetchWeatherData() {
-
-        val base = calculateBase()
-
-        viewModelScope.launch {
-            val result = remoteRepository.getShortTermForecast(
-                baseDate = base.first,
-                baseTime = base.second
-            )
-
-            Log.i(TAG, "result TAG: ${result.TAG}")
-
-            when (result) {
-                is ApiResult.Success -> {
-//                    weatherUiState = WeatherUiState.Success(result.value)
-                }
-
-                is ApiResult.NoData -> {
-                    weatherUiState = WeatherUiState.NoData
-                }
-
-                is ApiResult.Error -> {
-                    weatherUiState = WeatherUiState.Error
-                    Log.e(
-                        TAG,
-                        "error code: ${result.code} / message: ${result.message} / exception: ${result.exception}"
+                val shortTermForecastEntities =
+                    localRepository.getShortTermForecasts(
+                        now.format(dateFormatter),
+                        now.format(timeFormatter)
                     )
-                }
+
+                weatherUiState = WeatherUiState.Success(
+                    weatherList = shortTermForecastEntities.map { it.toDomain() },
+                    dailyTemperature = dailyTemperatureEntity.toDomain()
+                )
             }
         }
 
     }
 
     /**
-     * Pair <baseDate, baseTime> 반환
+     * 받은 모든 데이터를 로컬에 저장
+     * 불러올 때의 SQL에서 날짜, 시간에 따라 불러온다.
      */
-    fun calculateBase(): Pair<String, String> {
+    suspend fun saveData(result: List<ShortTermForecast>) {
+        // 1. save Daily Temperature
+        val dailyMixedTemperatures = result.filter {
+            it.minTemperature != null || it.maxTemperature != null
+        }
+
+        for (i in 0..2) {
+            val index = i * 2
+            val dailyTemp = DailyTemperature(
+                fcstDate = dailyMixedTemperatures.get(index).fcstDate,
+                minTemperature = dailyMixedTemperatures.get(index).minTemperature!!,
+                maxTemperature = dailyMixedTemperatures.get(index + 1).maxTemperature!!
+            )
+            localRepository.insertDailyTemperature(dailyTemp.toEntity())
+        }
+
+        // 2. save Short Term Forecast
+        localRepository.insertShortTermForecasts(result.map {
+            it.toEntity()
+        })
+    }
+
+    /**
+     * API 요청 시 최고/최저 기온 표시를 위해
+     * 0시 - 2시면 전날 데이터를 받아오고
+     * 2시 - 24시면 오늘 데이터를 받아온다.
+     */
+    suspend fun fetchWeatherData(): ApiResult<List<ShortTermForecast>> {
         val now = LocalDateTime.now()
-        val currentTimeInt = now.format(timeFormatter).toInt()
+        val time = now.format(timeFormatter)
 
-        // API 업데이트 시간 (시) : 2, 5, 8, 11, 14, 17, 20, 23
-        //  00시~2시 19분: 전날의 23시 예보를 받아와야 한다.
-        //  기준은 20분으로
-        //  2시 20분부터 5시 19분은 2시 예보 요청
+        // TODO 현재 위치의 nx, ny 전달 기능 추가
 
-        return when (currentTimeInt) {
-            in 0..219 -> Pair(now.minusDays(1).format(dateFormatter), "2300")
-            in 220..519 -> Pair(now.format(dateFormatter), "0200")
-            in 520..819 -> Pair(now.format(dateFormatter), "0500")
-            in 820..1119 -> Pair(now.format(dateFormatter), "0800")
-            in 1120..1419 -> Pair(now.format(dateFormatter), "1100")
-            in 1420..1719 -> Pair(now.format(dateFormatter), "1400")
-            in 1720..2019 -> Pair(now.format(dateFormatter), "1700")
-            in 2020..2319 -> Pair(now.format(dateFormatter), "2000")
-            in 2320..2359 -> Pair(now.format(dateFormatter), "2300")
-            else -> {
-                Log.e("BaseDate error", "base 시간이 잘못되었습니다. 오늘 23시 데이터를 요청합니다.")
-                Pair(now.format(dateFormatter), "2300")
-            }
+        if (time < "0220") {
+            // 00:00 - 02:19
+            return remoteRepository.getShortTermForecast(
+                baseDate = now.minusDays(1L).format(dateFormatter),
+                baseTime = "0200"
+            )
+
+        } else {
+            // 02:20 - 23:59
+            return remoteRepository.getShortTermForecast(
+                baseDate = now.format(dateFormatter),
+                baseTime = "0200"
+            )
         }
     }
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
