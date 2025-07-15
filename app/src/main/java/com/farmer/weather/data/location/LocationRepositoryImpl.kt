@@ -28,9 +28,9 @@ class LocationRepositoryImpl(private val context: Context) : LocationRepository 
                     // 순서대로 가장 작은 행정구역을 우선 반환함
                     if (adr.thoroughfare != null) {
                         Log.d(TAG, "address: ${adr.thoroughfare}")
-                        adr.thoroughfare
+                        return@withContext adr.thoroughfare
                     } else if (adr.subLocality != null) {
-                        adr.subLocality
+                        return@withContext adr.subLocality
                     }
                 }
                 null
