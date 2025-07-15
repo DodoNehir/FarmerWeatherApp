@@ -70,27 +70,30 @@ fun WeatherInfoScreen(
     dongAddress: String,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    Column(
-        modifier = modifier.padding(contentPadding)
+    LazyColumn(
+        modifier = modifier.padding(contentPadding),
+        // 아래 contentPadding은 리스트 안쪽 여백
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
     ) {
-        Text(text = dongAddress)
-
-        CurrentHighlightCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp),
-            weather = data.first(),
-            dailyTemp = dailyTemp
-        )
-
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
-        ) {
-            items(items = data.drop(1)) { item ->
-                WeatherCard(weather = item)
-            }
+        item {
+            Text(text = dongAddress)
         }
+
+        item {
+            CurrentHighlightCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                weather = data.first(),
+                dailyTemp = dailyTemp
+            )
+
+        }
+
+        items(items = data.drop(1)) { item ->
+            WeatherCard(weather = item)
+        }
+
 
     }
 }
