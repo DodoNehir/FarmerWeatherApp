@@ -39,12 +39,12 @@ fun HomeScreen(
     weatherUiState: WeatherUiState,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    // TODO 날씨 데이터가 현재 시각 이전의 정보는 표시하지 않도록 수정하기
     when (weatherUiState) {
         is WeatherUiState.Success -> WeatherInfoScreen(
             modifier = modifier,
             data = weatherUiState.weatherList,
             dailyTemp = weatherUiState.dailyTemperature,
+            dongAddress = weatherUiState.dongAddress,
             contentPadding = contentPadding,
         )
 
@@ -67,11 +67,14 @@ fun WeatherInfoScreen(
     modifier: Modifier = Modifier,
     data: List<ShortTermForecast>,
     dailyTemp: DailyTemperature,
+    dongAddress: String,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     Column(
         modifier = modifier.padding(contentPadding)
     ) {
+        Text(text = dongAddress)
+
         CurrentHighlightCard(
             modifier = Modifier
                 .fillMaxWidth()

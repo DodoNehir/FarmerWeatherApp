@@ -79,6 +79,10 @@ dependencies {
     implementation(libs.squareup.okhttp3.interceptor)
     implementation(libs.jetbrains.kotlinx.serialization)
 
+    // Location
+    implementation(libs.android.gms.location)
+    implementation(libs.google.accompanist.permissions)
+
     coreLibraryDesugaring(libs.android.desugar.jdk.libs)
 
     testImplementation(libs.junit)

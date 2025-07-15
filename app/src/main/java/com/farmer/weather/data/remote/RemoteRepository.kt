@@ -11,8 +11,8 @@ interface RemoteRepository {
     suspend fun getShortTermForecast(
         baseDate: String,
         baseTime: String,
-//        nx: Int,
-//        ny: Int
+        nx: Int,
+        ny: Int
     ): ApiResult<List<ShortTermForecast>>
 }
 
@@ -23,8 +23,8 @@ class RemoteRepositoryImpl(
     override suspend fun getShortTermForecast(
         baseDate: String,
         baseTime: String,
-//        nx: Int,
-//        ny: Int
+        nx: Int,
+        ny: Int
     ): ApiResult<List<ShortTermForecast>> {
 
         return try {
@@ -35,9 +35,8 @@ class RemoteRepositoryImpl(
                 dataType = Constants.DEFAULT_DATA_TYPE,
                 baseDate = baseDate,
                 baseTime = baseTime,
-                // TODO nx, ny 계산하기
-                nx = Constants.DEFAULT_NX,
-                ny = Constants.DEFAULT_NY
+                nx = nx,
+                ny = ny
             )
 
             when (responseDto.response.header.resultCode) {

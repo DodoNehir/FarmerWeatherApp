@@ -5,6 +5,8 @@ import android.util.Log.i
 import com.farmer.weather.data.local.LocalRepository
 import com.farmer.weather.data.local.LocalRepositoryImpl
 import com.farmer.weather.data.local.WeatherDatabase
+import com.farmer.weather.data.location.LocationRepository
+import com.farmer.weather.data.location.LocationRepositoryImpl
 import com.farmer.weather.data.remote.RemoteRepository
 import com.farmer.weather.data.remote.RemoteRepositoryImpl
 import com.farmer.weather.data.remote.api.WeatherApiService
@@ -20,6 +22,7 @@ import kotlin.apply
 interface AppContainer {
     val remoteRepository: RemoteRepository
     val localRepository: LocalRepository
+    val locationRepository: LocationRepository
 }
 
 class WeatherContainer(private val context: Context) : AppContainer {
@@ -59,5 +62,9 @@ class WeatherContainer(private val context: Context) : AppContainer {
             WeatherDatabase.getDatabase(context).shortTermForecastDao(),
             WeatherDatabase.getDatabase(context).dailyTemperatureDao()
         )
+    }
+
+    override val locationRepository: LocationRepository by lazy {
+        LocationRepositoryImpl(context)
     }
 }

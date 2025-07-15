@@ -14,10 +14,12 @@ import com.farmer.weather.WeatherApplication
 import com.farmer.weather.data.local.LocalRepository
 import com.farmer.weather.data.local.toDomain
 import com.farmer.weather.data.local.toEntity
+import com.farmer.weather.data.location.LocationRepository
 import com.farmer.weather.data.remote.ApiResult
 import com.farmer.weather.data.remote.RemoteRepository
 import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.ShortTermForecast
+import com.farmer.weather.util.Constants
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -27,7 +29,8 @@ sealed interface WeatherUiState {
 
     data class Success(
         val weatherList: List<ShortTermForecast>,
-        val dailyTemperature: DailyTemperature
+        val dailyTemperature: DailyTemperature,
+        val dongAddress: String
     ) : WeatherUiState
 
     object NoData : WeatherUiState
@@ -40,7 +43,8 @@ sealed interface WeatherUiState {
 
 class WeatherViewModel(
     private val localRepository: LocalRepository,
-    private val remoteRepository: RemoteRepository
+    private val remoteRepository: RemoteRepository,
+    private val locationRepository: LocationRepository
 ) : ViewModel() {
 
     val TAG = javaClass.simpleName
@@ -48,12 +52,17 @@ class WeatherViewModel(
     var weatherUiState: WeatherUiState by mutableStateOf(WeatherUiState.Loading)
         private set
 
+    private var currentLat: Double? = null
+    private var currentLon: Double? = null
+    private var dongAddress: String? = null
+    private var nxny: Pair<Int, Int>? = null
+
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
     private val timeFormatter = DateTimeFormatter.ofPattern("HH00")
 
-    init {
-        loadData()
-    }
+//    init {
+//        loadData()
+//    }
 
     fun loadData() {
         viewModelScope.launch {
@@ -86,7 +95,8 @@ class WeatherViewModel(
 
                         weatherUiState = WeatherUiState.Success(
                             weatherList = shortTermForecastEntities.map { it.toDomain() },
-                            dailyTemperature = dailyTemperatureEntity!!.toDomain()
+                            dailyTemperature = dailyTemperatureEntity!!.toDomain(),
+                            dongAddress = dongAddress ?: "대한민국"
                         )
                     }
 
@@ -115,7 +125,8 @@ class WeatherViewModel(
 
                 weatherUiState = WeatherUiState.Success(
                     weatherList = shortTermForecastEntities.map { it.toDomain() },
-                    dailyTemperature = dailyTemperatureEntity.toDomain()
+                    dailyTemperature = dailyTemperatureEntity.toDomain(),
+                    dongAddress = dongAddress ?: "대한민국"
                 )
             }
         }
@@ -157,24 +168,41 @@ class WeatherViewModel(
         val now = LocalDateTime.now()
         val time = now.format(timeFormatter)
 
-        // TODO 현재 위치의 nx, ny 전달 기능 추가
-
         if (time < "0220") {
             // 00:00 - 02:19
             return remoteRepository.getShortTermForecast(
                 baseDate = now.minusDays(1L).format(dateFormatter),
-                baseTime = "0200"
+                baseTime = "0200",
+                nx = nxny?.first ?: Constants.DEFAULT_NX,
+                ny = nxny?.second ?: Constants.DEFAULT_NY
             )
 
         } else {
             // 02:20 - 23:59
             return remoteRepository.getShortTermForecast(
                 baseDate = now.format(dateFormatter),
-                baseTime = "0200"
+                baseTime = "0200",
+                nx = nxny?.first ?: Constants.DEFAULT_NX,
+                ny = nxny?.second ?: Constants.DEFAULT_NY
             )
         }
     }
 
+    fun setLocation(lat: Double, lon: Double) {
+        if (currentLat == lat && currentLon == lon) return
+        currentLat = lat
+        currentLon = lon
+        viewModelScope.launch {
+            dongAddress = locationRepository.getAddress(lat, lon)
+            Log.d(TAG, " 동 이름: $dongAddress")
+            nxny = locationRepository.convertToNxNy(lat, lon)
+            Log.d(TAG, "nx: ${nxny?.first}   ny: ${nxny?.second}")
+            // TODO  근데 코루틴 중복임. 확인 필요
+            if (dongAddress != null && nxny != null) {
+                loadData()
+            }
+        }
+    }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
@@ -182,9 +210,11 @@ class WeatherViewModel(
                 val application = (this[APPLICATION_KEY] as WeatherApplication)
                 val localRepository = application.container.localRepository
                 val remoteRepository = application.container.remoteRepository
+                val locationRepository = application.container.locationRepository
                 WeatherViewModel(
                     localRepository = localRepository,
-                    remoteRepository = remoteRepository
+                    remoteRepository = remoteRepository,
+                    locationRepository = locationRepository
                 )
             }
         }
