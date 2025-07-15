@@ -1,6 +1,7 @@
 package com.farmer.weather.ui
 
 import android.Manifest
+import android.os.Build
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,9 +52,14 @@ fun WeatherApp() {
                     // viewModel에 위치 전달
                     weatherViewModel.setLocation(location.latitude, location.longitude)
                 } else {
-                    // TODO 애뮬레이터로는 실패한다. 실제 기기로 테스트하면 성공한다.
-                    Log.d(TAG, "위치 불러오기 실패. 권한은 있지만 위치를 불러올 수 없습니다.")
-
+                    if (isRunningOnEmulator()) {
+                        Log.d(TAG, "애뮬레이터이기 때문에 lastlocation 을 임의로 지정합니다. (고산2동 위경도 지정)")
+                        val defaultLat = 35.8403
+                        val defaultLon = 128.6973
+                        weatherViewModel.setLocation(defaultLat, defaultLon)
+                    } else {
+                        Log.d(TAG, "실제 기기이고 권한도 있지만 마지막 위치를 불러오지 못했습니다.")
+                    }
                 }
             }
         } else {
@@ -74,4 +80,13 @@ fun WeatherApp() {
             )
         }
     }
+}
+
+fun isRunningOnEmulator(): Boolean {
+    return Build.FINGERPRINT.contains("generic")
+            || Build.MODEL.contains("Emulator")
+            || Build.BRAND.contains("generic")
+            || Build.DEVICE.contains("generic")
+            || Build.HARDWARE.contains("ranchu") // 신형 에뮬
+            || Build.HARDWARE.contains("goldfish") // 구형 에뮬
 }
