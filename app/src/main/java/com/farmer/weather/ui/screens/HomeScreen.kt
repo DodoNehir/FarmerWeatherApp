@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -76,16 +77,11 @@ fun WeatherInfoScreen(
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
     ) {
         item {
-            Text(text = dongAddress)
-        }
-
-        item {
             CurrentHighlightCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
+                modifier = Modifier.fillMaxWidth(),
                 weather = data.first(),
-                dailyTemp = dailyTemp
+                dailyTemp = dailyTemp,
+                dongAddress = dongAddress
             )
 
         }
@@ -102,47 +98,56 @@ fun WeatherInfoScreen(
 fun CurrentHighlightCard(
     modifier: Modifier = Modifier,
     weather: ShortTermForecast,
-    dailyTemp: DailyTemperature
+    dailyTemp: DailyTemperature,
+    dongAddress: String
 ) {
     Card(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            Column(modifier = Modifier.weight(1.5f)) {
-                Text(
-                    text = "${weather.temperature}°",
-                    style = MaterialTheme.typography.displayLarge
-                )
-                Text(
-                    text = getWeatherIconString(weather.precipitationType, weather.skyStatus),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "최고 ${dailyTemp.maxTemperature}° / 최저 ${dailyTemp.minTemperature}°"
-                )
-                Text(
-                    text = "강수확률 ${weather.pop}%  풍속 ${weather.windSpeed}m/s"
-                )
+            Row {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = dongAddress,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "${weather.temperature}°",
+                        style = MaterialTheme.typography.displayLarge
+                    )
+                    Text(
+                        text = getWeatherIconString(weather.precipitationType, weather.skyStatus),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(top = 24.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // TODO 날씨에 따라 움직이면 좋겠지만 지금은 3d image
+                    Image(
+                        painter = getWeatherIcon(weather.precipitationType, weather.skyStatus),
+                        contentDescription = null,
+                        modifier = Modifier.size(100.dp)
+                    )
+                }
             }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // TODO 날씨에 따라 움직이면 좋겠지만 지금은 3d image
-                Image(
-                    painter = getWeatherIcon(weather.precipitationType, weather.skyStatus),
-                    contentDescription = null,
-                    modifier = Modifier.size(100.dp)
-                )
-            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "최고 ${dailyTemp.maxTemperature}° / 최저 ${dailyTemp.minTemperature}°"
+            )
+            Text(
+                text = "강수확률 ${weather.pop}%  풍속 ${weather.windSpeed}m/s"
+            )
         }
     }
 }
@@ -296,7 +301,8 @@ fun WeatherCardPreview() {
 //    WeatherCard(weather = dummyShortTermForecast)
     CurrentHighlightCard(
         weather = dummyShortTermForecast,
-        dailyTemp = dummyDailyTemperature
+        dailyTemp = dummyDailyTemperature,
+        dongAddress = "신매동"
     )
 }
 
