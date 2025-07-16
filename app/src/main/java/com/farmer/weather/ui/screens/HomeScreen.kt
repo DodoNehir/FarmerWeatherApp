@@ -86,7 +86,10 @@ fun WeatherInfoScreen(
 
         }
 
-        items(items = data.drop(1)) { item ->
+        items(
+            items = data.drop(1),
+            key = { "${it.fcstDate}_${it.fcstTime}" }
+        ) { item ->
             WeatherCard(weather = item)
         }
 
@@ -283,6 +286,8 @@ fun WeatherCardPreview() {
         baseTime = "1500",
         fcstDate = "20250705",
         fcstTime = "1500",
+        nx = 127,
+        ny = 90,
         pop = 60,
         precipitationType = 1,
         pcp = "16.3mm",
@@ -294,6 +299,8 @@ fun WeatherCardPreview() {
     )
     val dummyDailyTemperature = DailyTemperature(
         fcstDate = "20250705",
+        nx = 127,
+        ny = 90,
         minTemperature = "25.0",
         maxTemperature = "36.0"
     )

@@ -79,8 +79,11 @@ class WeatherViewModel(
 
     suspend fun loadData() {
         val now = LocalDateTime.now()
+        val nx = nxny!!.first
+        val ny = nxny!!.second
+
         val dailyTemperatureEntity =
-            localRepository.getDailyTemperature(now.format(dateFormatter))
+            localRepository.getDailyTemperature(now.format(dateFormatter), nx, ny)
 
         if (dailyTemperatureEntity == null) {
             Log.d(TAG, "local에 Daily Temperature 없음. API 호출 시작")
@@ -92,17 +95,16 @@ class WeatherViewModel(
             when (apiRequestResult) {
                 is ApiResult.Success -> {
                     // api 결과를 로컬에 저장
-                    saveData(apiRequestResult.value)
+                    saveData(nx, ny, apiRequestResult.value)
 
                     // 저장 값 불러오며 상태 업데이트
                     val dailyTemperatureEntity =
                         localRepository.getDailyTemperature(
-                            now.format(dateFormatter)
+                            now.format(dateFormatter), nx, ny
                         )
                     val shortTermForecastEntities =
                         localRepository.getShortTermForecasts(
-                            now.format(dateFormatter),
-                            now.format(timeFormatter)
+                            now.format(dateFormatter), now.format(timeFormatter), nx, ny
                         )
 
                     weatherUiState = WeatherUiState.Success(
@@ -131,8 +133,7 @@ class WeatherViewModel(
 
             val shortTermForecastEntities =
                 localRepository.getShortTermForecasts(
-                    now.format(dateFormatter),
-                    now.format(timeFormatter)
+                    now.format(dateFormatter), now.format(timeFormatter), nx, ny
                 )
 
             weatherUiState = WeatherUiState.Success(
@@ -148,7 +149,7 @@ class WeatherViewModel(
      * 받은 모든 데이터를 로컬에 저장
      * 불러올 때의 SQL에서 날짜, 시간에 따라 불러온다.
      */
-    suspend fun saveData(result: List<ShortTermForecast>) {
+    suspend fun saveData(nx: Int, ny: Int, result: List<ShortTermForecast>) {
         // 1. save Daily Temperature
         val dailyMixedTemperatures = result.filter {
             it.minTemperature != null || it.maxTemperature != null
@@ -159,7 +160,9 @@ class WeatherViewModel(
             val dailyTemp = DailyTemperature(
                 fcstDate = dailyMixedTemperatures.get(index).fcstDate,
                 minTemperature = dailyMixedTemperatures.get(index).minTemperature!!,
-                maxTemperature = dailyMixedTemperatures.get(index + 1).maxTemperature!!
+                maxTemperature = dailyMixedTemperatures.get(index + 1).maxTemperature!!,
+                nx = nx,
+                ny = ny
             )
             localRepository.insertDailyTemperature(dailyTemp.toEntity())
         }
@@ -212,8 +215,6 @@ class WeatherViewModel(
             )
         }
     }
-
-
 
 
     companion object {
