@@ -1,6 +1,7 @@
 package com.farmer.weather.ui.screens
 
 import android.util.Log
+import androidx.compose.material3.DatePickerDefaults.dateFormatter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -64,71 +65,81 @@ class WeatherViewModel(
 //        loadData()
 //    }
 
-    fun loadData() {
+    // 위치 권한이 있는 한 lat, lon 은 not null
+    fun updateLocation(lat: Double, lon: Double) {
         viewModelScope.launch {
-            val now = LocalDateTime.now()
-            val dailyTemperatureEntity =
-                localRepository.getDailyTemperature(now.format(dateFormatter))
 
-            if (dailyTemperatureEntity == null) {
-                Log.d(TAG, "local에 Daily Temperature 없음. API 호출 시작")
+            setLocation(lat, lon)
 
-                val apiRequestResult = fetchWeatherData()
+            if (dongAddress != null && nxny != null) {
+                loadData()
+            }
+        }
+    }
 
-                Log.i(TAG, "result TAG: ${apiRequestResult.TAG}")
+    suspend fun loadData() {
+        val now = LocalDateTime.now()
+        val dailyTemperatureEntity =
+            localRepository.getDailyTemperature(now.format(dateFormatter))
 
-                when (apiRequestResult) {
-                    is ApiResult.Success -> {
-                        // api 결과를 로컬에 저장
-                        saveData(apiRequestResult.value)
+        if (dailyTemperatureEntity == null) {
+            Log.d(TAG, "local에 Daily Temperature 없음. API 호출 시작")
 
-                        // 저장 값 불러오며 상태 업데이트
-                        val dailyTemperatureEntity =
-                            localRepository.getDailyTemperature(
-                                now.format(dateFormatter)
-                            )
-                        val shortTermForecastEntities =
-                            localRepository.getShortTermForecasts(
-                                now.format(dateFormatter),
-                                now.format(timeFormatter)
-                            )
+            val apiRequestResult = fetchWeatherData()
 
-                        weatherUiState = WeatherUiState.Success(
-                            weatherList = shortTermForecastEntities.map { it.toDomain() },
-                            dailyTemperature = dailyTemperatureEntity!!.toDomain(),
-                            dongAddress = dongAddress ?: "대한민국"
+            Log.i(TAG, "result TAG: ${apiRequestResult.TAG}")
+
+            when (apiRequestResult) {
+                is ApiResult.Success -> {
+                    // api 결과를 로컬에 저장
+                    saveData(apiRequestResult.value)
+
+                    // 저장 값 불러오며 상태 업데이트
+                    val dailyTemperatureEntity =
+                        localRepository.getDailyTemperature(
+                            now.format(dateFormatter)
                         )
-                    }
-
-                    is ApiResult.NoData -> {
-                        weatherUiState = WeatherUiState.NoData
-                    }
-
-                    is ApiResult.Error -> {
-                        weatherUiState = WeatherUiState.Error
-                        Log.e(
-                            TAG,
-                            "error code: ${apiRequestResult.code} / message: ${apiRequestResult.message} / exception: ${apiRequestResult.exception}"
+                    val shortTermForecastEntities =
+                        localRepository.getShortTermForecasts(
+                            now.format(dateFormatter),
+                            now.format(timeFormatter)
                         )
-                    }
+
+                    weatherUiState = WeatherUiState.Success(
+                        weatherList = shortTermForecastEntities.map { it.toDomain() },
+                        dailyTemperature = dailyTemperatureEntity!!.toDomain(),
+                        dongAddress = dongAddress ?: "대한민국"
+                    )
                 }
 
+                is ApiResult.NoData -> {
+                    weatherUiState = WeatherUiState.NoData
+                }
 
-            } else {
-                Log.d(TAG, "local 에서 Daily Temperature 발견: ${dailyTemperatureEntity}")
-
-                val shortTermForecastEntities =
-                    localRepository.getShortTermForecasts(
-                        now.format(dateFormatter),
-                        now.format(timeFormatter)
+                is ApiResult.Error -> {
+                    weatherUiState = WeatherUiState.Error
+                    Log.e(
+                        TAG,
+                        "error code: ${apiRequestResult.code} / message: ${apiRequestResult.message} / exception: ${apiRequestResult.exception}"
                     )
-
-                weatherUiState = WeatherUiState.Success(
-                    weatherList = shortTermForecastEntities.map { it.toDomain() },
-                    dailyTemperature = dailyTemperatureEntity.toDomain(),
-                    dongAddress = dongAddress ?: "대한민국"
-                )
+                }
             }
+
+
+        } else {
+            Log.d(TAG, "local 에서 Daily Temperature 발견: ${dailyTemperatureEntity}")
+
+            val shortTermForecastEntities =
+                localRepository.getShortTermForecasts(
+                    now.format(dateFormatter),
+                    now.format(timeFormatter)
+                )
+
+            weatherUiState = WeatherUiState.Success(
+                weatherList = shortTermForecastEntities.map { it.toDomain() },
+                dailyTemperature = dailyTemperatureEntity.toDomain(),
+                dongAddress = dongAddress ?: "대한민국"
+            )
         }
 
     }
@@ -160,6 +171,20 @@ class WeatherViewModel(
     }
 
     /**
+     * 주소명, nx ny 값
+     */
+    suspend fun setLocation(lat: Double, lon: Double) {
+        if (currentLat == lat && currentLon == lon) return
+        currentLat = lat
+        currentLon = lon
+
+        dongAddress = locationRepository.getAddress(lat, lon)
+        Log.d(TAG, " 동 이름: $dongAddress")
+        nxny = locationRepository.convertToNxNy(lat, lon)
+        Log.d(TAG, "nx: ${nxny?.first}   ny: ${nxny?.second}")
+    }
+
+    /**
      * API 요청 시 최고/최저 기온 표시를 위해
      * 0시 - 2시면 전날 데이터를 받아오고
      * 2시 - 24시면 오늘 데이터를 받아온다.
@@ -188,21 +213,8 @@ class WeatherViewModel(
         }
     }
 
-    fun setLocation(lat: Double, lon: Double) {
-        if (currentLat == lat && currentLon == lon) return
-        currentLat = lat
-        currentLon = lon
-        viewModelScope.launch {
-            dongAddress = locationRepository.getAddress(lat, lon)
-            Log.d(TAG, " 동 이름: $dongAddress")
-            nxny = locationRepository.convertToNxNy(lat, lon)
-            Log.d(TAG, "nx: ${nxny?.first}   ny: ${nxny?.second}")
-            // TODO  근데 코루틴 중복임. 확인 필요
-            if (dongAddress != null && nxny != null) {
-                loadData()
-            }
-        }
-    }
+
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {

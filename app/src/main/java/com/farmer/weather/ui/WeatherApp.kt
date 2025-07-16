@@ -7,13 +7,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import com.farmer.weather.ui.screens.WeatherViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,8 +18,8 @@ import com.farmer.weather.ui.screens.HomeScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
 import com.google.android.gms.location.LocationServices
+import kotlin.properties.Delegates
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -43,23 +40,31 @@ fun WeatherApp() {
         locationPermissionState.launchPermissionRequest()
     }
 
+    // status가 바뀔 때마다 실행됨
     LaunchedEffect(locationPermissionState.status) {
-        // status가 바뀔 때마다 실행됨
         if (locationPermissionState.status.isGranted) {
             fusedLocationClient.lastLocation.addOnSuccessListener { location ->
                 if (location != null) {
                     Log.d(TAG, "위치 불러오기 성공: lat: ${location.latitude}, lon: ${location.longitude}")
                     // viewModel에 위치 전달
-                    weatherViewModel.setLocation(location.latitude, location.longitude)
+                    weatherViewModel.updateLocation(location.latitude, location.longitude)
                 } else {
+                    var defaultLat by Delegates.notNull<Double>()
+                    var defaultLon by Delegates.notNull<Double>()
+
                     if (isRunningOnEmulator()) {
-                        Log.d(TAG, "애뮬레이터이기 때문에 lastlocation 을 임의로 지정합니다. (고산2동 위경도 지정)")
-                        val defaultLat = 35.8403
-                        val defaultLon = 128.6973
-                        weatherViewModel.setLocation(defaultLat, defaultLon)
+                        Log.d(TAG, "애뮬레이터이기 때문에 lastlocation 을 임의로 지정합니다. (고산2동)")
+                        defaultLat = 35.8403
+                        defaultLon = 128.6973
                     } else {
-                        Log.d(TAG, "실제 기기이고 권한도 있지만 마지막 위치를 불러오지 못했습니다.")
+                        Log.d(
+                            TAG, "실제 기기이고 권한도 있지만 마지막 위치를 불러오지 못했습니다. " +
+                                    "lastlocation을 세종시의 농림축산식품부로 설정합니다."
+                        )
+                        defaultLat = 36.5050
+                        defaultLon = 127.2655
                     }
+                    weatherViewModel.updateLocation(defaultLat, defaultLon)
                 }
             }
         } else {
