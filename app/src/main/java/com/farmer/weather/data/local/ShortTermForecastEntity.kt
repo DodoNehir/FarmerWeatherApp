@@ -1,12 +1,11 @@
 package com.farmer.weather.data.local
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import com.farmer.weather.domain.ShortTermForecast
 
 @Entity(
     tableName = "short_term_forecast",
-    primaryKeys = ["fcstDate", "fcstTime"]
+    primaryKeys = ["fcstDate", "fcstTime", "nx", "ny"]
 )
 data class ShortTermForecastEntity(
     val baseDate: String,
@@ -14,6 +13,8 @@ data class ShortTermForecastEntity(
 
     val fcstDate: String,
     val fcstTime: String,
+    val nx: Int,
+    val ny: Int,
 
     val pop: Int?, // 강수 확률
     val precipitationType: Int?,
@@ -34,6 +35,8 @@ fun ShortTermForecastEntity.toDomain(): ShortTermForecast =
         baseTime = this.baseTime,
         fcstDate = this.fcstDate,
         fcstTime = this.fcstTime,
+        nx = this.nx,
+        ny = this.ny,
         pop = this.pop,
         precipitationType = this.precipitationType,
         pcp = this.pcp,
@@ -44,12 +47,14 @@ fun ShortTermForecastEntity.toDomain(): ShortTermForecast =
         windSpeed = this.windSpeed
     )
 
-fun ShortTermForecast.toEntity() : ShortTermForecastEntity =
+fun ShortTermForecast.toEntity(): ShortTermForecastEntity =
     ShortTermForecastEntity(
         baseDate = this.baseDate,
         baseTime = this.baseTime,
         fcstDate = this.fcstDate,
         fcstTime = this.fcstTime,
+        nx = this.nx,
+        ny = this.ny,
         pop = this.pop,
         precipitationType = this.precipitationType,
         pcp = this.pcp,

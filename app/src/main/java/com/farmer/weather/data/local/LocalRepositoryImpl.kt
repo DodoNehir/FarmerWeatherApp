@@ -1,7 +1,5 @@
 package com.farmer.weather.data.local
 
-import kotlinx.coroutines.flow.Flow
-
 class LocalRepositoryImpl(
     private val shortTermForecastDao: ShortTermForecastDao,
     private val dailyTemperatureDao: DailyTemperatureDao
@@ -13,8 +11,13 @@ class LocalRepositoryImpl(
     override suspend fun deleteShortTermForecasts(oldDate: String) =
         shortTermForecastDao.deleteShortTermForecasts(oldDate)
 
-    override suspend fun getShortTermForecasts(date: String, time: String): List<ShortTermForecastEntity> =
-        shortTermForecastDao.getShortTermForecasts(date, time)
+    override suspend fun getShortTermForecasts(
+        date: String,
+        time: String,
+        nx: Int,
+        ny: Int
+    ): List<ShortTermForecastEntity> =
+        shortTermForecastDao.getShortTermForecasts(date, time, nx, ny)
 
 
     override suspend fun insertDailyTemperature(dailyTemperature: DailyTemperatureEntity) =
@@ -23,7 +26,11 @@ class LocalRepositoryImpl(
     override suspend fun deleteDailyTemperature(oldDate: String) =
         dailyTemperatureDao.deleteTemperature(oldDate)
 
-    override suspend fun getDailyTemperature(date: String): DailyTemperatureEntity? =
-        dailyTemperatureDao.getDailyTemperature(date)
+    override suspend fun getDailyTemperature(
+        date: String,
+        nx: Int,
+        ny: Int
+    ): DailyTemperatureEntity? =
+        dailyTemperatureDao.getDailyTemperature(date, nx, ny)
 
 }

@@ -10,6 +10,6 @@ data class Item(
     val fcstDate: String,
     val fcstTime: String,
     val fcstValue: String,
-//    val nx: Long,
-//    val ny: Long,
+    val nx: Int,
+    val ny: Int,
 )

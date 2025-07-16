@@ -5,6 +5,8 @@ data class ShortTermForecast(
     val baseTime: String,
     val fcstDate: String,
     val fcstTime: String,
+    val nx: Int,
+    val ny: Int,
     val pop: Int?, // 강수 확률
     val precipitationType: Int?,
     val pcp: String?, // 1시간 강수량

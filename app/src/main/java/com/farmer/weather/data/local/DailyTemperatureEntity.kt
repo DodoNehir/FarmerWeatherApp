@@ -1,12 +1,16 @@
 package com.farmer.weather.data.local
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import com.farmer.weather.domain.DailyTemperature
 
-@Entity(tableName = "daily_temperature")
+@Entity(
+    tableName = "daily_temperature",
+    primaryKeys = ["fcstDate", "nx", "ny"]
+)
 data class DailyTemperatureEntity(
-    @PrimaryKey val fcstDate: String, // YYYYMMDD : PK
+    val fcstDate: String, // YYYYMMDD : PK
+    val nx: Int,
+    val ny: Int,
     val maxTemperature: String,
     val minTemperature: String
 )
@@ -14,6 +18,8 @@ data class DailyTemperatureEntity(
 fun DailyTemperature.toEntity(): DailyTemperatureEntity =
     DailyTemperatureEntity(
         fcstDate = this.fcstDate,
+        nx = this.nx,
+        ny = this.ny,
         maxTemperature = this.maxTemperature,
         minTemperature = this.minTemperature
     )
@@ -21,6 +27,8 @@ fun DailyTemperature.toEntity(): DailyTemperatureEntity =
 fun DailyTemperatureEntity.toDomain(): DailyTemperature =
     DailyTemperature(
         fcstDate = this.fcstDate,
+        nx = this.nx,
+        ny = this.ny,
         maxTemperature = this.maxTemperature,
         minTemperature = this.minTemperature
     )

@@ -22,18 +22,20 @@ fun WeatherApiResponseDto.toShortTermForecasts(): List<ShortTermForecast> {
 
     val forecasts = mutableListOf<ShortTermForecast>()
 
-    for ((timeKey, timeValues) in itemsByForecastTime) {
-        val fcstDate = timeKey.first
-        val fcstTime = timeKey.second
+    for ((timePair, sameTimeItemList) in itemsByForecastTime) {
+        val fcstDate = timePair.first
+        val fcstTime = timePair.second
 
-        // List<Item> ->  (K: category / V: Item)  1:1 매핑
-        val categoryMap = timeValues.associateBy { it.category }
+        // List<Item> ->  Map < K: category, V: Item >  리스트를 맵으로 변환
+        val categoryMap = sameTimeItemList.associateBy { it.category }
 
         val forecast = ShortTermForecast(
-            baseDate = timeValues.first().baseDate,
-            baseTime = timeValues.first().baseTime,
+            baseDate = sameTimeItemList.first().baseDate,
+            baseTime = sameTimeItemList.first().baseTime,
             fcstDate = fcstDate,
             fcstTime = fcstTime,
+            nx = sameTimeItemList.first().nx,
+            ny = sameTimeItemList.first().ny,
 
             // 강수 확률
             pop = categoryMap["POP"]?.fcstValue?.toIntOrNull(),
