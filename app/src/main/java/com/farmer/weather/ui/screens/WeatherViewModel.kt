@@ -73,6 +73,8 @@ class WeatherViewModel(
 
             if (dongAddress != null && nxny != null) {
                 loadData()
+            } else {
+                weatherUiState = WeatherUiState.Error
             }
         }
     }

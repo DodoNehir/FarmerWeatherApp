@@ -278,7 +278,7 @@ fun getTimeString(fcstTime: String): String {
     }
 }
 
-@Preview(showBackground = true)
+
 @Composable
 fun WeatherCardPreview() {
     val dummyShortTermForecast = ShortTermForecast(
@@ -328,7 +328,7 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
     }
 }
 
-
+@Preview(showBackground = true)
 @Composable
 fun ErrorScreen(modifier: Modifier = Modifier) {
     Column(
