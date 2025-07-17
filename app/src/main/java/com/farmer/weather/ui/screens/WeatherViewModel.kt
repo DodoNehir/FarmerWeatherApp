@@ -20,11 +20,9 @@ import com.farmer.weather.data.remote.ApiResult
 import com.farmer.weather.data.remote.RemoteRepository
 import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.ShortTermForecast
-import com.farmer.weather.util.Constants
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.text.format
 
 
 sealed interface WeatherUiState {
@@ -186,21 +184,26 @@ class WeatherViewModel(
 
     suspend fun saveData(nx: Int, ny: Int, result: List<ShortTermForecast>) {
         // 1. save Daily Temperature
-        val dailyMixedTemperatures = result.filter {
-            it.minTemperature != null || it.maxTemperature != null
-        }
+        val groupedByDate = result
+            .filter { it.minTemperature != null || it.maxTemperature != null }
+            .groupBy { it.fcstDate }
 
-        for (i in 0..2) {
-            val index = i * 2
-            val dailyTemp = DailyTemperature(
-                fcstDate = dailyMixedTemperatures.get(index).fcstDate,
-                baseDate =
-                minTemperature = dailyMixedTemperatures.get(index).minTemperature!!,
-                maxTemperature = dailyMixedTemperatures.get(index + 1).maxTemperature!!,
-                nx = nx,
-                ny = ny
-            )
-            localRepository.insertDailyTemperature(dailyTemp.toEntity())
+        for ((fcstDate, fcstList) in groupedByDate) {
+            val min = fcstList.find { it.minTemperature != null }?.minTemperature
+            val max = fcstList.find { it.maxTemperature != null }?.maxTemperature
+
+            if (min != null && max != null) {
+                val dailyTemp = DailyTemperature(
+                    fcstDate = fcstDate,
+                    baseDate = fcstList.first().baseDate,
+                    baseTime = fcstList.first().baseTime,
+                    minTemperature = min,
+                    maxTemperature = max,
+                    nx = nx,
+                    ny = ny
+                )
+                localRepository.insertDailyTemperature(dailyTemp.toEntity())
+            }
         }
 
         // 2. save Short Term Forecast
