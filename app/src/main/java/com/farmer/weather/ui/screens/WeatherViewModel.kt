@@ -203,6 +203,9 @@ class WeatherViewModel(
                     ny = ny
                 )
                 localRepository.insertDailyTemperature(dailyTemp.toEntity())
+                Log.d(TAG, "date: ${fcstDate} 의 min, max 저장함")
+            } else {
+                Log.d(TAG, " saveData 도중 date:${fcstDate} 의 min or max 가 없어 저장하지 않음")
             }
         }
 
@@ -210,6 +213,7 @@ class WeatherViewModel(
         localRepository.insertShortTermForecasts(result.map {
             it.toEntity()
         })
+        Log.d(TAG, "전체 예보 저장함")
     }
 
     /**
