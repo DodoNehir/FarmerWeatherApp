@@ -183,7 +183,9 @@ fun WeatherCard(
             // 비 올 때만 강수량과 강수확률 표시
             if (weather.precipitationType in 1..4) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    modifier = Modifier.width(136.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(
                         text = "${weather.pcp} ",
@@ -278,7 +280,7 @@ fun getTimeString(fcstTime: String): String {
     }
 }
 
-
+@Preview(showBackground = true)
 @Composable
 fun WeatherCardPreview() {
     val dummyShortTermForecast = ShortTermForecast(
@@ -290,7 +292,7 @@ fun WeatherCardPreview() {
         ny = 90,
         pop = 60,
         precipitationType = 1,
-        pcp = "16.3mm",
+        pcp = "30.0 ~ 50.0mm",
         skyStatus = 1,
         temperature = 36,
         minTemperature = null,
@@ -307,12 +309,12 @@ fun WeatherCardPreview() {
         maxTemperature = 34
     )
 
-//    WeatherCard(weather = dummyShortTermForecast)
-    CurrentHighlightCard(
-        weather = dummyShortTermForecast,
-        dailyTemp = dummyDailyTemperature,
-        dongAddress = "신매동"
-    )
+    WeatherCard(weather = dummyShortTermForecast)
+//    CurrentHighlightCard(
+//        weather = dummyShortTermForecast,
+//        dailyTemp = dummyDailyTemperature,
+//        dongAddress = "신매동"
+//    )
 }
 
 @Composable
@@ -330,7 +332,7 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
     }
 }
 
-@Preview(showBackground = true)
+
 @Composable
 fun ErrorScreen(modifier: Modifier = Modifier) {
     Column(
