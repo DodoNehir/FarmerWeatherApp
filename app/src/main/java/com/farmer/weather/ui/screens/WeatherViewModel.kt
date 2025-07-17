@@ -20,7 +20,9 @@ import com.farmer.weather.data.remote.ApiResult
 import com.farmer.weather.data.remote.RemoteRepository
 import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.ShortTermForecast
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -112,6 +114,13 @@ class WeatherViewModel(
             2 -> {
                 updateUiStateWith(dailyTemperatureEntity!!, currentDate, currentTime, nx, ny)
             }
+        }
+
+        // UI 업데이트 후 옛날 정보 삭제
+        withContext(Dispatchers.IO) {
+            val expiryDate = now.minusDays(2L).format(dateFormatter).toInt()
+            localRepository.deleteDailyTemperature(expiryDate)
+            localRepository.deleteShortTermForecasts(expiryDate)
         }
 
     }
@@ -244,6 +253,7 @@ class WeatherViewModel(
         // flag 0: 2시 요청
         //      1: 14시 요청 -> 오늘 최고최저 기온은 아는데, 최신 정보로 업데이트를 또 했으면 좋겠다.
         if (requestFlag == 1) {
+            Log.d(TAG, "오늘 14시 데이터를 요청합니다.")
             return remoteRepository.getShortTermForecast(
                 baseDate = today,
                 baseTime = "1400",
@@ -253,6 +263,7 @@ class WeatherViewModel(
 
         } else {
             if (time < "0220") {
+                Log.d(TAG, "어제 02시 데이터를 요청합니다.")
                 // 00:00 - 02:19
                 return remoteRepository.getShortTermForecast(
                     baseDate = yesterday,
@@ -262,6 +273,7 @@ class WeatherViewModel(
                 )
 
             } else {
+                Log.d(TAG, "오늘 02시 데이터를 요청합니다.")
                 // 02:20 - 23:59
                 return remoteRepository.getShortTermForecast(
                     baseDate = today,

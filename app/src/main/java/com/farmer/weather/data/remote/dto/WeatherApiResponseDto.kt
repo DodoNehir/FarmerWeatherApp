@@ -49,8 +49,8 @@ fun WeatherApiResponseDto.toShortTermForecasts(): List<ShortTermForecast> {
             skyStatus = categoryMap["SKY"]?.fcstValue?.toIntOrNull(),
 
             temperature = categoryMap["TMP"]?.fcstValue?.toIntOrNull(),
-            minTemperature = categoryMap["TMN"]?.fcstValue?.toInt(),
-            maxTemperature = categoryMap["TMX"]?.fcstValue?.toInt(),
+            minTemperature = categoryMap["TMN"]?.fcstValue?.toDouble()?.toInt(),
+            maxTemperature = categoryMap["TMX"]?.fcstValue?.toDouble()?.toInt(),
 
             windSpeed = categoryMap["WSD"]?.fcstValue?.toDoubleOrNull(),
         )
