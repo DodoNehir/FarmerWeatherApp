@@ -15,16 +15,16 @@ interface ShortTermForecastDao {
     suspend fun insertShortTermForecasts(forecasts: List<ShortTermForecastEntity>)
 
     @Query(value = "DELETE FROM short_term_forecast WHERE fcstDate < :oldDate")
-    suspend fun deleteShortTermForecasts(oldDate: String)
+    suspend fun deleteShortTermForecasts(oldDate: Int)
 
     @Query(value = """
         SELECT * 
         FROM short_term_forecast 
         WHERE nx = :nx AND ny = :ny 
          AND fcstDate >= :date 
-         AND (fcstTime >= :time OR fcstDate > :date) 
+         AND ( fcstDate > :date OR fcstTime >= :time ) 
         ORDER BY fcstDate, fcstTime ASC
         LIMIT 28
         """)
-    suspend fun getShortTermForecasts(date : String, time: String, nx: Int, ny: Int) : List<ShortTermForecastEntity>
+    suspend fun getShortTermForecasts(date : Int, time: String, nx: Int, ny: Int) : List<ShortTermForecastEntity>
 }

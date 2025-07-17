@@ -13,7 +13,7 @@ interface WeatherApiService {
         @Query("pageNo") pageNo: Int,
         @Query("numOfRows") numOfRows: Int,
         @Query("dataType") dataType: String,
-        @Query("base_date") baseDate: String,
+        @Query("base_date") baseDate: Int,
         @Query("base_time") baseTime: String,
         @Query("nx") nx: Int,
         @Query("ny") ny: Int

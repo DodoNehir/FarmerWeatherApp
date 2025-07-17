@@ -8,16 +8,20 @@ import com.farmer.weather.domain.DailyTemperature
     primaryKeys = ["fcstDate", "nx", "ny"]
 )
 data class DailyTemperatureEntity(
-    val fcstDate: String, // YYYYMMDD : PK
+    val fcstDate: Int, // YYYYMMDD
+    val baseDate: Int,
+    val baseTime: String,
     val nx: Int,
     val ny: Int,
-    val maxTemperature: String,
-    val minTemperature: String
+    val maxTemperature: Int,
+    val minTemperature: Int
 )
 
 fun DailyTemperature.toEntity(): DailyTemperatureEntity =
     DailyTemperatureEntity(
         fcstDate = this.fcstDate,
+        baseDate = this.baseDate,
+        baseTime = this.baseTime,
         nx = this.nx,
         ny = this.ny,
         maxTemperature = this.maxTemperature,
@@ -27,6 +31,8 @@ fun DailyTemperature.toEntity(): DailyTemperatureEntity =
 fun DailyTemperatureEntity.toDomain(): DailyTemperature =
     DailyTemperature(
         fcstDate = this.fcstDate,
+        baseDate = this.baseDate,
+        baseTime = this.baseTime,
         nx = this.nx,
         ny = this.ny,
         maxTemperature = this.maxTemperature,

@@ -1,9 +1,9 @@
 package com.farmer.weather.domain
 
 data class ShortTermForecast(
-    val baseDate: String,
+    val baseDate: Int,
     val baseTime: String,
-    val fcstDate: String,
+    val fcstDate: Int,
     val fcstTime: String,
     val nx: Int,
     val ny: Int,
@@ -12,7 +12,7 @@ data class ShortTermForecast(
     val pcp: String?, // 1시간 강수량
     val skyStatus: Int?,
     val temperature: Int?,
-    val minTemperature: String?,
-    val maxTemperature: String?,
+    val minTemperature: Int?,
+    val maxTemperature: Int?,
     val windSpeed: Double?,
 )

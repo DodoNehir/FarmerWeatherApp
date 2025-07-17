@@ -9,7 +9,7 @@ import com.farmer.weather.BuildConfig
 
 interface RemoteRepository {
     suspend fun getShortTermForecast(
-        baseDate: String,
+        baseDate: Int,
         baseTime: String,
         nx: Int,
         ny: Int
@@ -21,7 +21,7 @@ class RemoteRepositoryImpl(
 ) : RemoteRepository {
 
     override suspend fun getShortTermForecast(
-        baseDate: String,
+        baseDate: Int,
         baseTime: String,
         nx: Int,
         ny: Int

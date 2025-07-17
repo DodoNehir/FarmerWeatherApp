@@ -29,10 +29,11 @@ fun WeatherApiResponseDto.toShortTermForecasts(): List<ShortTermForecast> {
         // List<Item> ->  Map < K: category, V: Item >  리스트를 맵으로 변환
         val categoryMap = sameTimeItemList.associateBy { it.category }
 
+        // json 결과로 String 타입으로 오는 값도 있어서 여기서 형변환한다.
         val forecast = ShortTermForecast(
-            baseDate = sameTimeItemList.first().baseDate,
+            baseDate = sameTimeItemList.first().baseDate.toInt(),
             baseTime = sameTimeItemList.first().baseTime,
-            fcstDate = fcstDate,
+            fcstDate = fcstDate.toInt(),
             fcstTime = fcstTime,
             nx = sameTimeItemList.first().nx,
             ny = sameTimeItemList.first().ny,
@@ -48,8 +49,8 @@ fun WeatherApiResponseDto.toShortTermForecasts(): List<ShortTermForecast> {
             skyStatus = categoryMap["SKY"]?.fcstValue?.toIntOrNull(),
 
             temperature = categoryMap["TMP"]?.fcstValue?.toIntOrNull(),
-            minTemperature = categoryMap["TMN"]?.fcstValue,
-            maxTemperature = categoryMap["TMX"]?.fcstValue,
+            minTemperature = categoryMap["TMN"]?.fcstValue?.toInt(),
+            maxTemperature = categoryMap["TMX"]?.fcstValue?.toInt(),
 
             windSpeed = categoryMap["WSD"]?.fcstValue?.toDoubleOrNull(),
         )

@@ -8,10 +8,10 @@ import com.farmer.weather.domain.ShortTermForecast
     primaryKeys = ["fcstDate", "fcstTime", "nx", "ny"]
 )
 data class ShortTermForecastEntity(
-    val baseDate: String,
+    val baseDate: Int,
     val baseTime: String,
 
-    val fcstDate: String,
+    val fcstDate: Int,
     val fcstTime: String,
     val nx: Int,
     val ny: Int,
@@ -23,8 +23,8 @@ data class ShortTermForecastEntity(
     val skyStatus: Int?,
 
     val temperature: Int?,
-    val minTemperature: String?,
-    val maxTemperature: String?,
+    val minTemperature: Int?,
+    val maxTemperature: Int?,
 
     val windSpeed: Double?,
 )

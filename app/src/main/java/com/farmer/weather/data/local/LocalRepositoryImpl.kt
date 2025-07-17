@@ -8,11 +8,11 @@ class LocalRepositoryImpl(
     override suspend fun insertShortTermForecasts(forecasts: List<ShortTermForecastEntity>) =
         shortTermForecastDao.insertShortTermForecasts(forecasts)
 
-    override suspend fun deleteShortTermForecasts(oldDate: String) =
+    override suspend fun deleteShortTermForecasts(oldDate: Int) =
         shortTermForecastDao.deleteShortTermForecasts(oldDate)
 
     override suspend fun getShortTermForecasts(
-        date: String,
+        date: Int,
         time: String,
         nx: Int,
         ny: Int
@@ -23,11 +23,11 @@ class LocalRepositoryImpl(
     override suspend fun insertDailyTemperature(dailyTemperature: DailyTemperatureEntity) =
         dailyTemperatureDao.insertTemperature(dailyTemperature)
 
-    override suspend fun deleteDailyTemperature(oldDate: String) =
+    override suspend fun deleteDailyTemperature(oldDate: Int) =
         dailyTemperatureDao.deleteTemperature(oldDate)
 
     override suspend fun getDailyTemperature(
-        date: String,
+        date: Int,
         nx: Int,
         ny: Int
     ): DailyTemperatureEntity? =

@@ -282,9 +282,9 @@ fun getTimeString(fcstTime: String): String {
 @Composable
 fun WeatherCardPreview() {
     val dummyShortTermForecast = ShortTermForecast(
-        baseDate = "20250705",
+        baseDate = 20250705,
         baseTime = "1500",
-        fcstDate = "20250705",
+        fcstDate = 20250705,
         fcstTime = "1500",
         nx = 127,
         ny = 90,
@@ -298,11 +298,13 @@ fun WeatherCardPreview() {
         windSpeed = 1.1,
     )
     val dummyDailyTemperature = DailyTemperature(
-        fcstDate = "20250705",
+        fcstDate = 20250705,
+        baseDate = 20250705,
+        baseTime = "0200",
         nx = 127,
         ny = 90,
-        minTemperature = "25.0",
-        maxTemperature = "36.0"
+        minTemperature = 26,
+        maxTemperature = 34
     )
 
 //    WeatherCard(weather = dummyShortTermForecast)
