@@ -18,4 +18,16 @@ interface WeatherApiService {
         @Query("nx") nx: Int,
         @Query("ny") ny: Int
     ): WeatherApiResponseDto
+
+    @GET("getUltraSrtNcst")
+    suspend fun getNowCasting(
+        @Query("serviceKey") serviceKey: String,
+        @Query("pageNo") pageNo: Int,
+        @Query("numOfRows") numOfRows: Int,
+        @Query("dataType") dataType: String,
+        @Query("base_date") baseDate: Int,
+        @Query("base_time") baseTime: String,
+        @Query("nx") nx: Int,
+        @Query("ny") ny: Int
+    ): WeatherApiResponseDto
 }

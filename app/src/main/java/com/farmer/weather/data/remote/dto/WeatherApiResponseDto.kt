@@ -1,5 +1,10 @@
 package com.farmer.weather.data.remote.dto
 
+import android.util.Log
+import com.farmer.weather.data.remote.nowRequireDouble
+import com.farmer.weather.data.remote.nowRequireInt
+import com.farmer.weather.data.remote.nowRequireString
+import com.farmer.weather.domain.NowCasting
 import com.farmer.weather.domain.ShortTermForecast
 import kotlinx.serialization.Serializable
 
@@ -33,8 +38,8 @@ fun WeatherApiResponseDto.toShortTermForecasts(): List<ShortTermForecast> {
         val forecast = ShortTermForecast(
             baseDate = sameTimeItemList.first().baseDate.toInt(),
             baseTime = sameTimeItemList.first().baseTime,
-            fcstDate = fcstDate.toInt(),
-            fcstTime = fcstTime,
+            fcstDate = fcstDate!!.toInt(),
+            fcstTime = fcstTime!!,
             nx = sameTimeItemList.first().nx,
             ny = sameTimeItemList.first().ny,
 
@@ -59,4 +64,20 @@ fun WeatherApiResponseDto.toShortTermForecasts(): List<ShortTermForecast> {
 
     return forecasts.sortedWith(compareBy<ShortTermForecast> { it.fcstDate }.thenBy { it.fcstTime })
 
+}
+
+fun WeatherApiResponseDto.toNowCasting(): NowCasting {
+    val items = this.response.body?.items?.item
+        ?: throw IllegalStateException("code is 00 but body is null")
+
+    val itemMap = items.associateBy { it.category }
+
+    return NowCasting(
+        temperature = itemMap.nowRequireDouble("T1H"),
+        rn1 = itemMap.nowRequireString("RN1"),
+        humidity = itemMap.nowRequireInt("REH"),
+        precipitationType = itemMap.nowRequireInt("PTY"),
+        windDirection = itemMap.nowRequireInt("VEC"),
+        windSpeed = itemMap.nowRequireDouble("WSD")
+    )
 }

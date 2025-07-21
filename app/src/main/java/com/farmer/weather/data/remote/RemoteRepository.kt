@@ -6,6 +6,8 @@ import com.farmer.weather.data.remote.dto.toShortTermForecasts
 import com.farmer.weather.domain.ShortTermForecast
 import com.farmer.weather.util.Constants
 import com.farmer.weather.BuildConfig
+import com.farmer.weather.data.remote.dto.toNowCasting
+import com.farmer.weather.domain.NowCasting
 
 interface RemoteRepository {
     suspend fun getShortTermForecast(
@@ -14,6 +16,13 @@ interface RemoteRepository {
         nx: Int,
         ny: Int
     ): ApiResult<List<ShortTermForecast>>
+
+    suspend fun getNowCasting(
+        baseDate: Int,
+        baseTime: String,
+        nx: Int,
+        ny: Int
+    ): ApiResult<NowCasting>
 }
 
 class RemoteRepositoryImpl(
@@ -26,7 +35,6 @@ class RemoteRepositoryImpl(
         nx: Int,
         ny: Int
     ): ApiResult<List<ShortTermForecast>> {
-
         return try {
             val responseDto = weatherApiService.getVilageForecast(
                 serviceKey = BuildConfig.WEATHER_API_KEY,
@@ -61,5 +69,54 @@ class RemoteRepositoryImpl(
         }
 
 
+    }
+
+    override suspend fun getNowCasting(
+        baseDate: Int,
+        baseTime: String,
+        nx: Int,
+        ny: Int
+    ): ApiResult<NowCasting> {
+        return try {
+            val responseDto = weatherApiService.getNowCasting(
+                serviceKey = BuildConfig.WEATHER_API_KEY,
+                pageNo = Constants.DEFAULT_PAGE_NO,
+                numOfRows = Constants.NOWCASTING_NUM_OF_ROWS,
+                dataType = Constants.DEFAULT_DATA_TYPE,
+                baseDate = baseDate,
+                baseTime = baseTime,
+                nx = nx,
+                ny = ny
+            )
+
+            when (responseDto.response.header.resultCode) {
+                "00" -> {
+                    try {
+                        val result = responseDto.toNowCasting()
+                        ApiResult.Success(result)
+                    } catch (e: IllegalStateException) {
+                        ApiResult.Error(
+                            code = "00",
+                            message = e.message,
+                            exception = e
+                        )
+                    }
+                }
+
+                "03" -> {
+                    ApiResult.NoData
+                }
+
+                else -> {
+                    ApiResult.Error(
+                        code = responseDto.response.header.resultCode,
+                        message = responseDto.response.header.resultMsg
+                    )
+                }
+            }
+
+        } catch (e: Exception) {
+            ApiResult.Error(code = null, message = e.message, exception = e)
+        }
     }
 }

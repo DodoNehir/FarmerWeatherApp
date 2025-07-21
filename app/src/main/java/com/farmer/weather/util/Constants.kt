@@ -7,4 +7,6 @@ object Constants {
     const val DEFAULT_DATA_TYPE = "JSON"
     const val DEFAULT_NX = 55
     const val DEFAULT_NY = 127
+
+    const val NOWCASTING_NUM_OF_ROWS = 10
 }
