@@ -92,28 +92,19 @@ class WeatherViewModel(
             localRepository.getDailyTemperature(currentDate, nx, ny)
 
 
-        when (shouldFetchWeather(dailyTemperatureEntity, now)) {
-            0 -> {
-                // 처음부터 요청 필요
-                requestWeatherAndSave(nx, ny, now, 0)
-                val updatedEntity = localRepository.getDailyTemperature(currentDate, nx, ny)
+        if (dailyTemperatureEntity == null) {
+            // 요청 / 저장/ 불러오기
+            requestWeatherAndSave(nx, ny, now)
+            val updatedEntity = localRepository.getDailyTemperature(currentDate, nx, ny)
 
-                if (updatedEntity != null) {
-                    updateUiStateWith(updatedEntity, currentDate, currentTime, nx, ny)
-                } else {
-                    Log.d(TAG, "첫 조회 결과가 없어 request & save 후 다시 조회했지만 결과가 없음")
-                    weatherUiState = WeatherUiState.Error
-                }
+            if (updatedEntity != null) {
+                updateUiStateWith(updatedEntity, currentDate, currentTime, nx, ny)
+            } else {
+                Log.d(TAG, "첫 조회 결과가 없어 request & save 후 다시 조회했지만 결과가 없음")
+                weatherUiState = WeatherUiState.Error
             }
-
-            1 -> {
-                requestWeatherAndSave(nx, ny, now, 1)
-                updateUiStateWith(dailyTemperatureEntity!!, currentDate, currentTime, nx, ny)
-            }
-
-            2 -> {
-                updateUiStateWith(dailyTemperatureEntity!!, currentDate, currentTime, nx, ny)
-            }
+        } else {
+            updateUiStateWith(dailyTemperatureEntity, currentDate, currentTime, nx, ny)
         }
 
         // UI 업데이트 후 옛날 정보 삭제
@@ -125,31 +116,10 @@ class WeatherViewModel(
 
     }
 
-    fun shouldFetchWeather(savedEntity: DailyTemperatureEntity?, now: LocalDateTime): Int {
-        if (savedEntity == null) return 0
 
-        // 13시간 전 데이터라면 재요청. parse가 실패해도 재요청
-        val thresholdTime = now.minusHours(13L)
-        try {
-            val savedTime = LocalDateTime.parse(
-                savedEntity.baseDate.toString() + savedEntity.baseTime.padStart(4, '0'),
-                dateTimeFormatter
-            )
-            if (savedTime.isBefore(thresholdTime)) {
-                return 1
-            } else {
-                return 2
-            }
-        } catch (e: Exception) {
-            Log.d(TAG, "local date time parse error")
-            return 0
-        }
-    }
-
-
-    suspend fun requestWeatherAndSave(nx: Int, ny: Int, now: LocalDateTime, requestFlag: Int) {
-        Log.d(TAG, "weather API 호출합니다.")
-        val apiRequestResult = fetchWeatherData(nx, ny, now, requestFlag)
+    suspend fun requestWeatherAndSave(nx: Int, ny: Int, now: LocalDateTime) {
+        Log.d(TAG, "오늘의 Daily Temperature 가 없습니다. weather API 호출합니다.")
+        val apiRequestResult = fetchDailyMinMax(nx, ny, now)
 
         Log.i(TAG, "호출 결과 TAG: ${apiRequestResult.TAG}")
         when (apiRequestResult) {
@@ -179,7 +149,7 @@ class WeatherViewModel(
         nx: Int,
         ny: Int
     ) {
-        Log.d(TAG, "Update UI state")
+        Log.d(TAG, "Start update UI state")
 
         val shortTermForecastEntities =
             localRepository.getShortTermForecasts(currentDate, currentTIme, nx, ny)
@@ -240,49 +210,36 @@ class WeatherViewModel(
     }
 
 
-    suspend fun fetchWeatherData(
+    suspend fun fetchDailyMinMax(
         nx: Int,
         ny: Int,
-        now: LocalDateTime,
-        requestFlag: Int
+        now: LocalDateTime
     ): ApiResult<List<ShortTermForecast>> {
         val time = now.format(timeFormatter)
         val today = now.format(dateFormatter).toInt()
         val yesterday = now.minusDays(1L).format(dateFormatter).toInt()
 
-        // flag 0: 2시 요청
-        //      1: 14시 요청 -> 오늘 최고최저 기온은 아는데, 최신 정보로 업데이트를 또 했으면 좋겠다.
-        if (requestFlag == 1) {
-            Log.d(TAG, "오늘 14시 데이터를 요청합니다.")
+        // TODO Min, MAX를 알기 위함이므로 NumOfRow를 조정해야 할 것 같다
+        // 오늘 2시 10분 이후  : 오늘 2시 base 요청
+        // 오늘 0시-2시10분 전 : 어제 2시 Base 요청
+        if (time < "0210") {
+            Log.d(TAG, "어제 02시 데이터를 요청합니다.")
+            // 00:00 - 02:09
             return remoteRepository.getShortTermForecast(
-                baseDate = today,
-                baseTime = "1400",
+                baseDate = yesterday,
+                baseTime = "0200",
                 nx = nx,
                 ny = ny
             )
-
         } else {
-            if (time < "0220") {
-                Log.d(TAG, "어제 02시 데이터를 요청합니다.")
-                // 00:00 - 02:19
-                return remoteRepository.getShortTermForecast(
-                    baseDate = yesterday,
-                    baseTime = "0200",
-                    nx = nx,
-                    ny = ny
-                )
-
-            } else {
-                Log.d(TAG, "오늘 02시 데이터를 요청합니다.")
-                // 02:20 - 23:59
-                return remoteRepository.getShortTermForecast(
-                    baseDate = today,
-                    baseTime = "0200",
-                    nx = nx,
-                    ny = ny
-                )
-            }
-
+            Log.d(TAG, "오늘 02시 데이터를 요청합니다.")
+            // 02:10 - 23:59
+            return remoteRepository.getShortTermForecast(
+                baseDate = today,
+                baseTime = "0200",
+                nx = nx,
+                ny = ny
+            )
         }
 
     }
