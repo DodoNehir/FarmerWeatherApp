@@ -1,13 +1,12 @@
 package com.farmer.weather.data.remote
 
-import android.util.Log.e
+import com.farmer.weather.BuildConfig
 import com.farmer.weather.data.remote.api.WeatherApiService
-import com.farmer.weather.data.remote.dto.toShortTermForecasts
+import com.farmer.weather.data.remote.dto.getUltraSrtNcst.toNowCasting
+import com.farmer.weather.data.remote.dto.getVilageFcst.toShortTermForecasts
+import com.farmer.weather.domain.NowCasting
 import com.farmer.weather.domain.ShortTermForecast
 import com.farmer.weather.util.Constants
-import com.farmer.weather.BuildConfig
-import com.farmer.weather.data.remote.dto.toNowCasting
-import com.farmer.weather.domain.NowCasting
 
 interface RemoteRepository {
     suspend fun getShortTermForecast(

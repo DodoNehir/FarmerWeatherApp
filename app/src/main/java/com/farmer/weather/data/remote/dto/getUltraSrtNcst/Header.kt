@@ -1,4 +1,4 @@
-package com.farmer.weather.data.remote.dto
+package com.farmer.weather.data.remote.dto.getUltraSrtNcst
 
 import kotlinx.serialization.Serializable
 
