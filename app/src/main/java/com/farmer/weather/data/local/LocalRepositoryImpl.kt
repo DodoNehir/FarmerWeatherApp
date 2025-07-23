@@ -19,6 +19,14 @@ class LocalRepositoryImpl(
     ): List<ShortTermForecastEntity> =
         shortTermForecastDao.getShortTermForecasts(date, time, nx, ny)
 
+    override suspend fun getOneForecast(
+        date: Int,
+        time: String,
+        nx: Int,
+        ny: Int
+    ): ShortTermForecastEntity? =
+        shortTermForecastDao.getOneForecast(date, time, nx, ny)
+
 
     override suspend fun insertDailyTemperature(dailyTemperature: DailyTemperatureEntity) =
         dailyTemperatureDao.insertTemperature(dailyTemperature)

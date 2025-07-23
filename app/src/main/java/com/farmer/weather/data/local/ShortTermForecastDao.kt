@@ -27,4 +27,12 @@ interface ShortTermForecastDao {
         LIMIT 28
         """)
     suspend fun getShortTermForecasts(date : Int, time: String, nx: Int, ny: Int) : List<ShortTermForecastEntity>
+
+    @Query(value = """
+        SELECT * FROM short_term_forecast 
+        WHERE nx = :nx AND ny = :ny 
+         AND fcstDate = :date AND fcstTime = :time
+         LIMIT 1
+    """)
+    suspend fun getOneForecast(date: Int, time: String, nx: Int, ny: Int): ShortTermForecastEntity?
 }

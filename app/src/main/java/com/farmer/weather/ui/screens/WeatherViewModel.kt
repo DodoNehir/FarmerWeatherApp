@@ -2,6 +2,7 @@ package com.farmer.weather.ui.screens
 
 import android.util.Log
 import androidx.collection.intListOf
+import androidx.compose.material3.DatePickerDefaults.dateFormatter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -108,7 +109,6 @@ class WeatherViewModel(
                 Log.d(TAG, "NowCasting 받기 성공")
 
                 if (dailyTemperatureEntity == null) {
-                    // 요청 / 저장 / 불러오기
                     requestWeatherAndSave(nx, ny, now)
                     val updatedEntity = localRepository.getDailyTemperature(currentDate, nx, ny)
 
@@ -134,6 +134,27 @@ class WeatherViewModel(
                         nx,
                         ny
                     )
+                }
+
+                // 현재 상태가 Success 일때만 업데이트 확인하기
+                val preState = weatherUiState
+                if (preState is WeatherUiState.Success) {
+                    if (shouldUpdateForecast(nx, ny, now)) {
+                        withContext(Dispatchers.IO) {
+                            updateLatelyForecastAndSave(nx, ny, now)
+
+                            val result = localRepository.getShortTermForecasts(
+                                currentDate,
+                                currentTime,
+                                nx,
+                                ny
+                            )
+
+                            Log.d(TAG, "이전에 받은 예보가 7시간 전의 예보이므로 새로 업데이트합니다.")
+                            weatherUiState =
+                                preState.copy(weatherList = result.map { it.toDomain() })
+                        }
+                    }
                 }
 
                 // UI 업데이트 후 옛날 정보 삭제
@@ -162,13 +183,13 @@ class WeatherViewModel(
 
 
     suspend fun requestWeatherAndSave(nx: Int, ny: Int, now: LocalDateTime) {
-        Log.d(TAG, "오늘의 Daily Temperature 가 없습니다. weather API 호출합니다.")
+        Log.d(TAG, "오늘의 Daily Temperature 가 없습니다. min,max와 최신 예보를 가져오고 저장합니다.")
 
         val minMaxResult = fetchDailyMinMax(nx, ny, now)
-        Log.i(TAG, "min max 결과 TAG: ${minMaxResult.TAG}")
+        Log.d(TAG, "min max 결과 TAG: ${minMaxResult.TAG}")
         when (minMaxResult) {
             is ApiResult.Success -> {
-                saveData(nx, ny, minMaxResult.value)
+                saveMinMax(nx, ny, minMaxResult.value)
             }
 
             is ApiResult.NoData -> {
@@ -185,10 +206,10 @@ class WeatherViewModel(
         }
 
         val forecastResult = fetchLatelyForecast(nx, ny, now)
-        Log.i(TAG, "최신 날씨 결과 TAG: ${forecastResult.TAG}")
+        Log.d(TAG, "최신 날씨 결과 TAG: ${forecastResult.TAG}")
         when (forecastResult) {
             is ApiResult.Success -> {
-                saveData(nx, ny, forecastResult.value)
+                saveForecast(forecastResult.value)
             }
 
             is ApiResult.NoData -> {
@@ -205,6 +226,37 @@ class WeatherViewModel(
         }
     }
 
+    suspend fun updateLatelyForecastAndSave(nx: Int, ny: Int, now: LocalDateTime) {
+        val forecastResult = fetchLatelyForecast(nx, ny, now)
+        Log.d(TAG, "최신 날씨 결과 TAG: ${forecastResult.TAG}")
+
+        if (forecastResult is ApiResult.Success) {
+            saveForecast(forecastResult.value)
+            saveMinMax(nx, ny, forecastResult.value) // min, max도 최신으로 업데이트
+        }
+    }
+
+    suspend fun shouldUpdateForecast(nx: Int, ny: Int, now: LocalDateTime): Boolean {
+        val entity = localRepository.getOneForecast(
+            now.format(dateFormatter).toInt(),
+            now.format(timeFormatter),
+            nx,
+            ny
+        ) ?: return true
+
+        val stored = entity.toDomain()
+        val storedDate =
+            try {
+                LocalDateTime.parse(
+                    stored.baseDate.toString() + stored.baseTime,
+                    dateTimeFormatter
+                )
+            } catch (e: Exception) {
+                return true // parse 에 실패해도 다시 업데이트하기
+            }
+
+        return storedDate.isBefore(now.minusHours(7L))
+    }
 
     suspend fun updateUiStateWith(
         dailyTemperatureEntity: DailyTemperatureEntity,
@@ -229,8 +281,7 @@ class WeatherViewModel(
         )
     }
 
-    suspend fun saveData(nx: Int, ny: Int, result: List<ShortTermForecast>) {
-        // 1. save Daily Temperature
+    suspend fun saveMinMax(nx: Int, ny: Int, result: List<ShortTermForecast>) {
         val groupedByDate = result
             .filter { it.minTemperature != null || it.maxTemperature != null }
             .groupBy { it.fcstDate }
@@ -250,17 +301,18 @@ class WeatherViewModel(
                     ny = ny
                 )
                 localRepository.insertDailyTemperature(dailyTemp.toEntity())
-                Log.d(TAG, "date: ${fcstDate} 의 min, max 저장함")
+                Log.d(TAG, "save min, max at ${fcstDate}")
             } else {
-                Log.d(TAG, " saveData 도중 date:${fcstDate} 의 min or max 가 없어 저장하지 않음")
+                Log.d(TAG, " saveMinMax 도중 ${fcstDate}  min or max 가 없어 저장하지 않음")
             }
         }
+    }
 
-        // 2. save Short Term Forecast
+    suspend fun saveForecast(result: List<ShortTermForecast>) {
         localRepository.insertShortTermForecasts(result.map {
             it.toEntity()
         })
-        Log.d(TAG, "전체 예보 저장함")
+        Log.d(TAG, "예보 저장")
     }
 
     /**
