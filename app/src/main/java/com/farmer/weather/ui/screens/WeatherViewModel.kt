@@ -1,6 +1,7 @@
 package com.farmer.weather.ui.screens
 
 import android.util.Log
+import androidx.collection.intListOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -21,11 +22,13 @@ import com.farmer.weather.data.remote.RemoteRepository
 import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.NowCasting
 import com.farmer.weather.domain.ShortTermForecast
+import com.farmer.weather.util.Constants
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 sealed interface WeatherUiState {
@@ -93,10 +96,16 @@ class WeatherViewModel(
         val dailyTemperatureEntity =
             localRepository.getDailyTemperature(currentDate, nx, ny)
 
-        val nowCastingResult = remoteRepository.getNowCasting(currentDate, currentTime, nx, ny)
+        val nowCastingDatePair = getAvailableNowCastingBaseDateTime(now)
+        val nowCastingResult = remoteRepository.getNowCasting(
+            nowCastingDatePair.first,
+            nowCastingDatePair.second,
+            nx,
+            ny
+        )
         when (nowCastingResult) {
             is ApiResult.Success -> {
-                Log.d(TAG, "NowCasting 받기 성공. 다음 단계로 불러온 Entity의 null check 시작합니다.")
+                Log.d(TAG, "NowCasting 받기 성공")
 
                 if (dailyTemperatureEntity == null) {
                     // 요청 / 저장 / 불러오기
@@ -154,12 +163,12 @@ class WeatherViewModel(
 
     suspend fun requestWeatherAndSave(nx: Int, ny: Int, now: LocalDateTime) {
         Log.d(TAG, "오늘의 Daily Temperature 가 없습니다. weather API 호출합니다.")
-        val apiRequestResult = fetchDailyMinMax(nx, ny, now)
 
-        Log.i(TAG, "호출 결과 TAG: ${apiRequestResult.TAG}")
-        when (apiRequestResult) {
+        val minMaxResult = fetchDailyMinMax(nx, ny, now)
+        Log.i(TAG, "min max 결과 TAG: ${minMaxResult.TAG}")
+        when (minMaxResult) {
             is ApiResult.Success -> {
-                saveData(nx, ny, apiRequestResult.value)
+                saveData(nx, ny, minMaxResult.value)
             }
 
             is ApiResult.NoData -> {
@@ -170,7 +179,27 @@ class WeatherViewModel(
                 weatherUiState = WeatherUiState.Error
                 Log.e(
                     TAG,
-                    "error code: ${apiRequestResult.code} / message: ${apiRequestResult.message} / exception: ${apiRequestResult.exception}"
+                    "error code: ${minMaxResult.code} / message: ${minMaxResult.message} / exception: ${minMaxResult.exception}"
+                )
+            }
+        }
+
+        val forecastResult = fetchLatelyForecast(nx, ny, now)
+        Log.i(TAG, "최신 날씨 결과 TAG: ${forecastResult.TAG}")
+        when (forecastResult) {
+            is ApiResult.Success -> {
+                saveData(nx, ny, forecastResult.value)
+            }
+
+            is ApiResult.NoData -> {
+                weatherUiState = WeatherUiState.NoData
+            }
+
+            is ApiResult.Error -> {
+                weatherUiState = WeatherUiState.Error
+                Log.e(
+                    TAG,
+                    "error code: ${forecastResult.code} / message: ${forecastResult.message} / exception: ${forecastResult.exception}"
                 )
             }
         }
@@ -258,15 +287,13 @@ class WeatherViewModel(
         val today = now.format(dateFormatter).toInt()
         val yesterday = now.minusDays(1L).format(dateFormatter).toInt()
 
-        // TODO Min, MAX를 알기 위함이므로 NumOfRow를 조정해야 할 것 같다
-        // 오늘 2시 10분 이후  : 오늘 2시 base 요청
-        // 오늘 0시-2시10분 전 : 어제 2시 Base 요청
         if (time < "0210") {
             Log.d(TAG, "어제 02시 데이터를 요청합니다.")
             // 00:00 - 02:09
             return remoteRepository.getShortTermForecast(
                 baseDate = yesterday,
-                baseTime = "0200",
+                baseTime = "2300",
+                numOfRows = Constants.TMN_TMX_23_NUM_OF_ROWS,
                 nx = nx,
                 ny = ny
             )
@@ -276,11 +303,78 @@ class WeatherViewModel(
             return remoteRepository.getShortTermForecast(
                 baseDate = today,
                 baseTime = "0200",
+                numOfRows = Constants.TMN_TMX_2_NUM_OF_ROWS,
                 nx = nx,
                 ny = ny
             )
         }
 
+    }
+
+    suspend fun fetchLatelyForecast(
+        nx: Int,
+        ny: Int,
+        now: LocalDateTime
+    ): ApiResult<List<ShortTermForecast>> {
+        Log.d(TAG, "최신 예보를 조회합니다.")
+        val availableDateTimePair = getAvailableForecastBaseDateTime(now)
+        return remoteRepository.getShortTermForecast(
+            baseDate = availableDateTimePair.first,
+            baseTime = availableDateTimePair.second,
+            numOfRows = Constants.FORECAST_NUM_OF_ROWS,
+            nx = nx,
+            ny = ny
+        )
+    }
+
+    fun getAvailableForecastBaseDateTime(now: LocalDateTime): Pair<Int, String> {
+        val availableTimes = listOf(2, 5, 8, 11, 14, 17, 20, 23)
+        val currentHour = now.hour
+        val currentMinute = now.minute
+
+        var baseHour = availableTimes.lastOrNull { it <= currentHour } ?: 23
+        var baseDate = now
+
+        if (baseHour == currentHour && currentMinute < 10) {
+            // 각 시각 10분 이후에만 요청 가능. 한 타임 전으로 이동
+            val currentIndex = availableTimes.indexOf(baseHour)
+            if (currentIndex == 0) {
+                // 전날로 요청하기
+                baseDate = now.minusDays(1L)
+                baseHour = 23
+            } else {
+                baseHour = availableTimes[currentIndex - 1]
+            }
+        }
+
+        val hourString = String.format(Locale.KOREA, "%02d00", baseHour)
+
+        return (baseDate.format(dateFormatter).toInt() to hourString)
+    }
+
+    fun getAvailableNowCastingBaseDateTime(now: LocalDateTime): Pair<Int, String> {
+        val availableTimes: IntRange = 0..23
+        val currentHour = now.hour
+        val currentMinute = now.minute
+
+        var baseHour = availableTimes.last { it <= currentHour }
+        var baseDate = now
+
+        if (currentMinute < 10) {
+            // 각 시각 10분 이후에만 요청 가능. 한 타임 전으로 이동
+            val currentIndex = availableTimes.indexOf(baseHour)
+            if (currentIndex == 0) {
+                // 전날로 요청하기
+                baseDate = now.minusDays(1L)
+                baseHour = 23
+            } else {
+                baseHour = availableTimes.elementAt(currentIndex - 1)
+            }
+        }
+
+        val hourString = String.format(Locale.KOREA, "%02d00", baseHour)
+
+        return (baseDate.format(dateFormatter).toInt() to hourString)
     }
 
 

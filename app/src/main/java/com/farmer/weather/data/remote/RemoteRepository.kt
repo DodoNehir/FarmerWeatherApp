@@ -12,6 +12,7 @@ interface RemoteRepository {
     suspend fun getShortTermForecast(
         baseDate: Int,
         baseTime: String,
+        numOfRows: Int,
         nx: Int,
         ny: Int
     ): ApiResult<List<ShortTermForecast>>
@@ -31,6 +32,7 @@ class RemoteRepositoryImpl(
     override suspend fun getShortTermForecast(
         baseDate: Int,
         baseTime: String,
+        numOfRows: Int,
         nx: Int,
         ny: Int
     ): ApiResult<List<ShortTermForecast>> {
@@ -38,7 +40,7 @@ class RemoteRepositoryImpl(
             val responseDto = weatherApiService.getVilageForecast(
                 serviceKey = BuildConfig.WEATHER_API_KEY,
                 pageNo = Constants.DEFAULT_PAGE_NO,
-                numOfRows = Constants.DEFAULT_NUM_OF_ROWS,
+                numOfRows = numOfRows,
                 dataType = Constants.DEFAULT_DATA_TYPE,
                 baseDate = baseDate,
                 baseTime = baseTime,
@@ -70,7 +72,6 @@ class RemoteRepositoryImpl(
 
     }
 
-    // TODO 200OK 를 받아오는데도 최종으로는 Error가 반환되고 있는 문제??
     override suspend fun getNowCasting(
         baseDate: Int,
         baseTime: String,
