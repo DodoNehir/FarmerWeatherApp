@@ -71,6 +71,7 @@ class RemoteRepositoryImpl(
 
     }
 
+    // TODO 200OK 를 받아오는데도 최종으로는 Error가 반환되고 있는 문제??
     override suspend fun getNowCasting(
         baseDate: Int,
         baseTime: String,

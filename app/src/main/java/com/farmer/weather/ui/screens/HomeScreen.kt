@@ -1,5 +1,6 @@
 package com.farmer.weather.ui.screens
 
+import android.R.attr.text
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -32,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.farmer.weather.R
 import com.farmer.weather.domain.DailyTemperature
+import com.farmer.weather.domain.NowCasting
 import com.farmer.weather.domain.ShortTermForecast
 
 @Composable
@@ -43,9 +45,10 @@ fun HomeScreen(
     when (weatherUiState) {
         is WeatherUiState.Success -> WeatherInfoScreen(
             modifier = modifier,
-            data = weatherUiState.weatherList,
-            dailyTemp = weatherUiState.dailyTemperature,
             dongAddress = weatherUiState.dongAddress,
+            nowCasting = weatherUiState.nowCasting,
+            dailyTemp = weatherUiState.dailyTemperature,
+            shortTermList = weatherUiState.weatherList,
             contentPadding = contentPadding,
         )
 
@@ -66,9 +69,10 @@ fun HomeScreen(
 @Composable
 fun WeatherInfoScreen(
     modifier: Modifier = Modifier,
-    data: List<ShortTermForecast>,
-    dailyTemp: DailyTemperature,
     dongAddress: String,
+    nowCasting: NowCasting,
+    dailyTemp: DailyTemperature,
+    shortTermList: List<ShortTermForecast>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     LazyColumn(
@@ -79,15 +83,15 @@ fun WeatherInfoScreen(
         item {
             CurrentHighlightCard(
                 modifier = Modifier.fillMaxWidth(),
-                weather = data.first(),
+                dongAddress = dongAddress,
+                nowCasting = nowCasting,
                 dailyTemp = dailyTemp,
-                dongAddress = dongAddress
             )
 
         }
 
         items(
-            items = data.drop(1),
+            items = shortTermList.drop(1),
             key = { "${it.fcstDate}_${it.fcstTime}" }
         ) { item ->
             WeatherCard(weather = item)
@@ -100,9 +104,9 @@ fun WeatherInfoScreen(
 @Composable
 fun CurrentHighlightCard(
     modifier: Modifier = Modifier,
-    weather: ShortTermForecast,
+    dongAddress: String,
+    nowCasting: NowCasting,
     dailyTemp: DailyTemperature,
-    dongAddress: String
 ) {
     Card(
         modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp)
@@ -120,11 +124,13 @@ fun CurrentHighlightCard(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "${weather.temperature}°",
+                        text = "${nowCasting.temperature}°",
                         style = MaterialTheme.typography.displayLarge
                     )
                     Text(
-                        text = getWeatherIconString(weather.precipitationType, weather.skyStatus),
+                        // TODO 단기예보와는 또다른 강수 형태이기 때문에 다른 함수를 만들어야 한다. 지금은 임의로 0을 넣자
+                        //  skystatus 없이 그냥 강수 타입으로 파악해야 됨
+                        text = getWeatherIconString(nowCasting.precipitationType, 0),
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
@@ -138,7 +144,7 @@ fun CurrentHighlightCard(
                 ) {
                     // TODO 날씨에 따라 움직이면 좋겠지만 지금은 3d image
                     Image(
-                        painter = getWeatherIcon(weather.precipitationType, weather.skyStatus),
+                        painter = getWeatherIcon(nowCasting.precipitationType, 0),
                         contentDescription = null,
                         modifier = Modifier.size(100.dp)
                     )
@@ -148,8 +154,10 @@ fun CurrentHighlightCard(
             Text(
                 text = "최고 ${dailyTemp.maxTemperature}° / 최저 ${dailyTemp.minTemperature}°"
             )
+            // TODO 강수확률은 필요없다. 내리던가 안 내리던가이니까.
+            //  대신 풍향을 넣어야겠다.
             Text(
-                text = "강수확률 ${weather.pop}%  풍속 ${weather.windSpeed}m/s"
+                text = "  풍속 ${nowCasting.windSpeed}m/s"
             )
         }
     }
