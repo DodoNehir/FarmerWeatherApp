@@ -154,6 +154,8 @@ class WeatherViewModel(
                             weatherUiState =
                                 preState.copy(weatherList = result.map { it.toDomain() })
                         }
+                    } else {
+                        Log.d(TAG, "예보가 최신 상태이므로 업데이트하지 않습니다.")
                     }
                 }
 

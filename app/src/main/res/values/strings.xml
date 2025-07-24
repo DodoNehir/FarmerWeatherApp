@@ -8,6 +8,7 @@
     <string name="sleet">비/눈</string>
     <string name="snow">눈</string>
     <string name="showers">소나기</string>
+    <string name="raindrop">빗방울</string>
     <string name="clear">맑음</string>
     <string name="cloudy">구름 많음</string>
     <string name="overcast">흐림</string>
