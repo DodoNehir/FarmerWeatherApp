@@ -2,6 +2,7 @@ package com.farmer.weather.ui.screens
 
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,6 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -182,10 +185,13 @@ fun CurrentHighlightCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row {
+                val isDark = isSystemInDarkTheme()
+                val arrowColor = if (isDark) Color.White else Color.Black
                 Image(
                     painterResource(R.drawable.baseline_arrow_upward_24),
                     contentDescription = "wind direction",
-                    modifier = Modifier.rotate(nowCasting.windDirection.toFloat())
+                    modifier = Modifier.rotate(nowCasting.windDirection.toFloat()),
+                    colorFilter = ColorFilter.tint(arrowColor)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
