@@ -1,6 +1,5 @@
 package com.farmer.weather.ui.screens
 
-import android.R.attr.text
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,6 +74,10 @@ fun WeatherInfoScreen(
     shortTermList: List<ShortTermForecast>,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+    Log.d("WeatherInfoScreen", "nowCasting: ${nowCasting}")
+    Log.d("WeatherInfoScreen", "dailyTemp: ${dailyTemp}")
+    Log.d("WeatherInfoScreen", "shortTermList[0]: ${shortTermList.get(0)}")
+    Log.d("WeatherInfoScreen", "shortTermList[1]: ${shortTermList.get(1)}")
     LazyColumn(
         modifier = modifier.padding(contentPadding),
         // 아래 contentPadding은 리스트 안쪽 여백
@@ -386,6 +387,8 @@ fun WeatherCardPreview() {
         maxTemperature = 34
     )
     val dummyNowCasting = NowCasting(
+        baseDate = "20250725",
+        baseTime = "1600",
         temperature = 30.1,
         rn1 = "30.0 ~ 50.0mm",
         humidity = 60,
