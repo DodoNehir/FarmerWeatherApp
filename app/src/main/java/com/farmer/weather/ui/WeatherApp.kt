@@ -47,7 +47,7 @@ fun WeatherApp() {
                 if (location != null) {
                     Log.d(TAG, "위치 불러오기 성공: lat: ${location.latitude}, lon: ${location.longitude}")
                     // viewModel에 위치 전달
-                    weatherViewModel.updateLocation(location.latitude, location.longitude)
+                    weatherViewModel.startLoadWeather(location.latitude, location.longitude)
                 } else {
                     var defaultLat by Delegates.notNull<Double>()
                     var defaultLon by Delegates.notNull<Double>()
@@ -64,7 +64,8 @@ fun WeatherApp() {
                         defaultLat = 36.5050
                         defaultLon = 127.2655
                     }
-                    weatherViewModel.updateLocation(defaultLat, defaultLon)
+
+                    weatherViewModel.startLoadWeather(defaultLat, defaultLon)
                 }
             }
         } else {
