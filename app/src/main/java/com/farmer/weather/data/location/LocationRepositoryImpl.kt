@@ -11,7 +11,7 @@ import java.util.Locale
 
 class LocationRepositoryImpl(private val context: Context) : LocationRepository {
 
-    private val TAG = javaClass.name
+    private val TAG = "LocationRepositoryImpl"
 
     override suspend fun getAddress(lat: Double, lon: Double): String? {
 
@@ -24,10 +24,9 @@ class LocationRepositoryImpl(private val context: Context) : LocationRepository 
                 // addressLines=[0:"대한민국 대구광역시 수성구 신매동 364-1"]
                 if (addresses?.first() != null) {
                     val adr = addresses.first()
-                    Log.d(TAG, "address: ${adr}")
+                    Log.d(TAG, "get address from lat, lon: ${adr}")
                     // 순서대로 가장 작은 행정구역을 우선 반환함
                     if (adr.thoroughfare != null) {
-                        Log.d(TAG, "address: ${adr.thoroughfare}")
                         return@withContext adr.thoroughfare
                     } else if (adr.subLocality != null) {
                         return@withContext adr.subLocality

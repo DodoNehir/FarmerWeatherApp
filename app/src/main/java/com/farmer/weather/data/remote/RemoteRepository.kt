@@ -1,5 +1,6 @@
 package com.farmer.weather.data.remote
 
+import android.util.Log
 import com.farmer.weather.BuildConfig
 import com.farmer.weather.data.remote.api.WeatherApiService
 import com.farmer.weather.data.remote.dto.getUltraSrtNcst.toNowCasting
@@ -37,6 +38,7 @@ class RemoteRepositoryImpl(
         ny: Int
     ): ApiResult<List<ShortTermForecast>> {
         return try {
+            Log.d("RemoteRepository", "start http get shortTermForecast")
             val responseDto = weatherApiService.getVilageForecast(
                 serviceKey = BuildConfig.WEATHER_API_KEY,
                 pageNo = Constants.DEFAULT_PAGE_NO,
@@ -79,6 +81,7 @@ class RemoteRepositoryImpl(
         ny: Int
     ): ApiResult<NowCasting> {
         return try {
+            Log.d("RemoteRepository", "start http get nowCasting")
             val responseDto = weatherApiService.getNowCasting(
                 serviceKey = BuildConfig.WEATHER_API_KEY,
                 pageNo = Constants.DEFAULT_PAGE_NO,

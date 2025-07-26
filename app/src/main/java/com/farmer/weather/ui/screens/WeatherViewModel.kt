@@ -1,8 +1,6 @@
 package com.farmer.weather.ui.screens
 
 import android.util.Log
-import androidx.collection.intListOf
-import androidx.compose.material3.DatePickerDefaults.dateFormatter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -106,10 +104,12 @@ class WeatherViewModel(
         )
         when (nowCastingResult) {
             is ApiResult.Success -> {
-                Log.d(TAG, "NowCasting 받기 성공")
+                Log.d(TAG, "NowCasting ApiResult : Success")
 
                 if (dailyTemperatureEntity == null) {
                     requestWeatherAndSave(nx, ny, now)
+                    // TODO 위의 함수가 api 호출을 두 번 하는데 둘 중 하나만 실패해도 진행되면 안 되지만
+                    //  계속 진행되어 앱이 크래시되는 문제 발생함
                     val updatedEntity = localRepository.getDailyTemperature(currentDate, nx, ny)
 
                     if (updatedEntity != null) {
@@ -185,10 +185,10 @@ class WeatherViewModel(
 
 
     suspend fun requestWeatherAndSave(nx: Int, ny: Int, now: LocalDateTime) {
-        Log.d(TAG, "오늘의 Daily Temperature 가 없습니다. min,max와 최신 예보를 가져오고 저장합니다.")
+        Log.d(TAG, "There's no DailyTemperature. start request and save for (min,max) & (nowCasting)")
 
         val minMaxResult = fetchDailyMinMax(nx, ny, now)
-        Log.d(TAG, "min max 결과 TAG: ${minMaxResult.TAG}")
+        Log.d(TAG, "fetchDailyMinMax ApiResult: ${minMaxResult.TAG}")
         when (minMaxResult) {
             is ApiResult.Success -> {
                 saveMinMax(nx, ny, minMaxResult.value)
@@ -207,8 +207,8 @@ class WeatherViewModel(
             }
         }
 
-        val forecastResult = fetchLatelyForecast(nx, ny, now)
-        Log.d(TAG, "최신 날씨 결과 TAG: ${forecastResult.TAG}")
+        val forecastResult = fetchShortTermForecast(nx, ny, now)
+        Log.d(TAG, "fetchShortTermForecast ApiResult: ${forecastResult.TAG}")
         when (forecastResult) {
             is ApiResult.Success -> {
                 saveForecast(forecastResult.value)
@@ -229,7 +229,7 @@ class WeatherViewModel(
     }
 
     suspend fun updateLatelyForecastAndSave(nx: Int, ny: Int, now: LocalDateTime) {
-        val forecastResult = fetchLatelyForecast(nx, ny, now)
+        val forecastResult = fetchShortTermForecast(nx, ny, now)
         Log.d(TAG, "최신 날씨 결과 TAG: ${forecastResult.TAG}")
 
         if (forecastResult is ApiResult.Success) {
@@ -303,9 +303,9 @@ class WeatherViewModel(
                     ny = ny
                 )
                 localRepository.insertDailyTemperature(dailyTemp.toEntity())
-                Log.d(TAG, "save min, max at ${fcstDate}")
+                Log.d(TAG, "saved min, max fcstDate: ${fcstDate}")
             } else {
-                Log.d(TAG, " saveMinMax 도중 ${fcstDate}  min or max 가 없어 저장하지 않음")
+                Log.d(TAG, "While saving fcstDate: ${fcstDate} there's no value (min or max)")
             }
         }
     }
@@ -326,7 +326,7 @@ class WeatherViewModel(
         currentLon = lon
 
         dongAddress = locationRepository.getAddress(lat, lon)
-        Log.d(TAG, " 동 이름: $dongAddress")
+        Log.d(TAG, "dongAddress: $dongAddress")
         nxny = locationRepository.convertToNxNy(lat, lon)
         Log.d(TAG, "nx: ${nxny?.first}   ny: ${nxny?.second}")
     }
@@ -342,7 +342,7 @@ class WeatherViewModel(
         val yesterday = now.minusDays(1L).format(dateFormatter).toInt()
 
         if (time < "0210") {
-            Log.d(TAG, "어제 02시 데이터를 요청합니다.")
+            Log.d(TAG, "time is ${time}. request yesterday 23:00.")
             // 00:00 - 02:09
             return remoteRepository.getShortTermForecast(
                 baseDate = yesterday,
@@ -352,7 +352,7 @@ class WeatherViewModel(
                 ny = ny
             )
         } else {
-            Log.d(TAG, "오늘 02시 데이터를 요청합니다.")
+            Log.d(TAG, "time is ${time}. request today 02:00")
             // 02:10 - 23:59
             return remoteRepository.getShortTermForecast(
                 baseDate = today,
@@ -365,13 +365,14 @@ class WeatherViewModel(
 
     }
 
-    suspend fun fetchLatelyForecast(
+    suspend fun fetchShortTermForecast(
         nx: Int,
         ny: Int,
         now: LocalDateTime
     ): ApiResult<List<ShortTermForecast>> {
-        Log.d(TAG, "최신 예보를 조회합니다.")
+        Log.d(TAG, "start fetchShortTermForecast")
         val availableDateTimePair = getAvailableForecastBaseDateTime(now)
+        Log.d(TAG, "availableDateTimePair: ${availableDateTimePair}")
         return remoteRepository.getShortTermForecast(
             baseDate = availableDateTimePair.first,
             baseTime = availableDateTimePair.second,
