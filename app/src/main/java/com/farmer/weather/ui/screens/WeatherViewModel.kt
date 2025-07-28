@@ -192,7 +192,7 @@ class WeatherViewModel(
                     nxny.second
                 )
                 if (result.isNotEmpty()) {
-                    Log.d(TAG, "이전 예보가 7시간 전 이므로 새로 업데이트합니다.")
+                    Log.d(TAG, "예보 baseTime 이 7시간 전 이므로 새로 업데이트합니다.")
                     val currentState = weatherUiState
                     if (currentState is WeatherUiState.Success) {
                         weatherUiState =
@@ -342,21 +342,14 @@ class WeatherViewModel(
     fun getAvailableForecastBaseDateTime(): Pair<Int, String> {
         val availableTimes = listOf(2, 5, 8, 11, 14, 17, 20, 23)
         val currentHour = now.hour
-        val currentMinute = now.minute
 
-        var baseHour = availableTimes.lastOrNull { it <= currentHour } ?: 23
+        var baseHour = availableTimes.lastOrNull { it < currentHour } ?: 23
         var baseDate = now
 
-        if (baseHour == currentHour && currentMinute < 10) {
-            // 각 시각 10분 이후에만 요청 가능. 한 타임 전으로 이동
-            val currentIndex = availableTimes.indexOf(baseHour)
-            if (currentIndex == 0) {
-                // 전날로 요청하기
-                baseDate = now.minusDays(1L)
-                baseHour = 23
-            } else {
-                baseHour = availableTimes[currentIndex - 1]
-            }
+        if (baseHour == 23) {
+            // baseHour 가 23이 되는 경우는 어제로 바꿔야 하는 경우다.
+            // ex) 23:50 은 baseHour 20시로 요청 됨
+            baseDate = now.minusDays(1L)
         }
 
         val hourString = String.format(Locale.KOREA, "%02d00", baseHour)
@@ -372,8 +365,8 @@ class WeatherViewModel(
         var baseHour = availableTimes.last { it <= currentHour }
         var baseDate = now
 
-        if (currentMinute < 10) {
-            // 각 시각 10분 이후에만 요청 가능. 한 타임 전으로 이동
+        if (currentMinute < 13) {
+            // 각 시각 13분부터 요청 가능. 한 타임 전으로 이동
             val currentIndex = availableTimes.indexOf(baseHour)
             if (currentIndex == 0) {
                 // 전날로 요청하기

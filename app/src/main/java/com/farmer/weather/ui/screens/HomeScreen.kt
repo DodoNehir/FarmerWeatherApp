@@ -79,7 +79,6 @@ fun WeatherInfoScreen(
 ) {
     Log.d("WeatherInfoScreen", "nowCasting: ${nowCasting}")
     Log.d("WeatherInfoScreen", "dailyTemp: ${dailyTemp}")
-    // TODO shortTermList가 empty로 넘어올 때도 있음. 의도한 대로가 맞는지?
     if (shortTermList.isNotEmpty()) {
         Log.d("WeatherInfoScreen", "shortTermList[0]: ${shortTermList.get(0)}")
         Log.d("WeatherInfoScreen", "shortTermList[1]: ${shortTermList.get(1)}")
