@@ -395,8 +395,10 @@ fun WeatherCardPreview() {
         maxTemperature = 34
     )
     val dummyNowCasting = NowCasting(
-        baseDate = "20250725",
+        baseDate = 20250725,
         baseTime = "1600",
+        nx = 127,
+        ny = 90,
         temperature = 30.1,
         rn1 = "30.0 ~ 50.0mm",
         humidity = 60,

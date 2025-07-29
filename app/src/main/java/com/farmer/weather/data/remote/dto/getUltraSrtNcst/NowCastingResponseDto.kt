@@ -18,8 +18,10 @@ fun NowCastingResponseDto.toNowCasting(): NowCasting {
     val itemMap = items.associateBy { it.category }
 
     return NowCasting(
-        baseDate = items.first().baseDate,
+        baseDate = items.first().baseDate.toInt(),
         baseTime = items.first().baseTime,
+        nx = items.first().nx,
+        ny = items.first().ny,
         temperature = itemMap.nowRequireDouble("T1H"),
         rn1 = itemMap.nowRequireString("RN1"),
         humidity = itemMap.nowRequireInt("REH"),

@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.farmer.weather.WeatherApplication
 import com.farmer.weather.data.local.DailyTemperatureEntity
 import com.farmer.weather.data.local.LocalRepository
+import com.farmer.weather.data.local.NowCastingEntity
 import com.farmer.weather.data.local.toDomain
 import com.farmer.weather.data.local.toEntity
 import com.farmer.weather.data.location.LocationRepository
@@ -100,28 +101,54 @@ class WeatherViewModel(
         val nx = nxny.first
         val ny = nxny.second
         var finalDailyTempEntity: DailyTemperatureEntity? = null
+        var finalNowCastingEntity: NowCastingEntity? = null
 
-        // 1. 저장된 min, max 검색
-        val dailyTemperatureEntity =
-            localRepository.getDailyTemperature(currentDate, nx, ny)
-
-        // 2. nowCasting 요청
+        // 1. nowCasting
         val nowCastingDatePair = getAvailableNowCastingBaseDateTime()
-        val nowCastingResult = remoteRepository.getNowCasting(
+        val nowCastingEntity = localRepository.getNowCasting(
             nowCastingDatePair.first,
             nowCastingDatePair.second,
             nx,
             ny
         )
-        Log.d(TAG, "getNowCasting ApiResult: ${nowCastingResult.TAG}")
-        if (nowCastingResult !is ApiResult.Success) {
-            weatherUiState = mapToUiState(nowCastingResult)
-            return
+
+        // 1-1. 없으면 nowcasting 요청, 저장
+        if (nowCastingEntity == null) {
+            val nowCastingResult = remoteRepository.fetchNowCasting(
+                nowCastingDatePair.first,
+                nowCastingDatePair.second,
+                nx,
+                ny
+            )
+            Log.d(TAG, "fetchNowCasting ApiResult: ${nowCastingResult.TAG}")
+            if (nowCastingResult !is ApiResult.Success) {
+                weatherUiState = mapToUiState(nowCastingResult)
+                return
+            }
+            localRepository.insertNowCasting(nowCastingResult.value.toEntity())
+
+            finalNowCastingEntity = localRepository.getNowCasting(
+                nowCastingDatePair.first,
+                nowCastingDatePair.second,
+                nx,
+                ny
+            )
+            if (finalNowCastingEntity == null) {
+                weatherUiState = WeatherUiState.Error
+                return
+            }
+        } else {
+            // 1-2. 있으면 그대로 사용
+            finalNowCastingEntity = nowCastingEntity
         }
 
-        // 3. 기존 데이터 없으면
+
+        // 2. min, max
+        val dailyTemperatureEntity =
+            localRepository.getDailyTemperature(currentDate, nx, ny)
+
+        // 2-1. 없으면 fetch
         if (dailyTemperatureEntity == null) {
-            // 3-1. DailyTemperature 요청, 저장
             val minMaxResult = fetchDailyMinMax(nx, ny)
             Log.d(TAG, "fetchDailyMinMax ApiResult: ${minMaxResult.TAG}")
             if (minMaxResult !is ApiResult.Success) {
@@ -130,7 +157,7 @@ class WeatherViewModel(
             }
             saveMinMax(minMaxResult.value)
 
-            // 3-2. ShortTermForecast List 요청, 저장
+            // daily 가 없으면 forecast 도 없다는 뜻
             val forecastResult = fetchShortTermForecast()
             Log.d(TAG, "fetchShortTermForecast ApiResult: ${forecastResult.TAG}")
             if (forecastResult !is ApiResult.Success) {
@@ -139,10 +166,8 @@ class WeatherViewModel(
             }
             saveForecast(forecastResult.value)
 
-            // 3-3. 다시 저장된 min, max 검색
+            // 저장 후 다시 검색
             finalDailyTempEntity = localRepository.getDailyTemperature(currentDate, nx, ny)
-
-            // 3-3-1. should not occur. 정상 응답에 저장도 했지만 가져오기 실패 시 프로세스 종료
             if (finalDailyTempEntity == null) {
                 Log.d(TAG, "should not occur. 정상 응답에 저장도 했지만, DB 검색 실패로 프로세스 종료")
                 weatherUiState = WeatherUiState.Error
@@ -150,11 +175,11 @@ class WeatherViewModel(
             }
 
         } else {
-            // 4. 기존 데이터 있으면 그대로 사용
+            // 2-2. 있으면 그대로 사용
             finalDailyTempEntity = dailyTemperatureEntity
         }
 
-        // 5. 날씨 리스트 검색
+        // 3. 날씨 리스트
         val shortTermForecastEntities =
             localRepository.getShortTermForecasts(currentDate, currentTime, nx, ny)
         if (shortTermForecastEntities.isEmpty()) {
@@ -162,10 +187,10 @@ class WeatherViewModel(
             return
         }
 
-        // 6. 상태를 Success 로 바꿈
+        // 4. 상태를 Success 로 바꿈
         weatherUiState = WeatherUiState.Success(
             dongAddress = dongAddress ?: "대한민국",
-            nowCasting = nowCastingResult.value,
+            nowCasting = finalNowCastingEntity.toDomain(),
             dailyTemperature = finalDailyTempEntity.toDomain(),
             weatherList = shortTermForecastEntities.map { it.toDomain() },
         )
@@ -303,9 +328,9 @@ class WeatherViewModel(
         val yesterday = now.minusDays(1L).format(dateFormatter).toInt()
 
         if (time < "0210") {
-            Log.d(TAG, "time is ${time}. request yesterday 23:00.")
+            Log.d(TAG, "fetch DailyTemperature. request yesterday 23:00.")
             // 00:00 - 02:09
-            return remoteRepository.getShortTermForecast(
+            return remoteRepository.fetchShortTermForecast(
                 baseDate = yesterday,
                 baseTime = "2300",
                 numOfRows = Constants.TMN_TMX_23_NUM_OF_ROWS,
@@ -313,9 +338,9 @@ class WeatherViewModel(
                 ny = ny
             )
         } else {
-            Log.d(TAG, "time is ${time}. request today 02:00")
+            Log.d(TAG, "fetch DailyTemperature. request today 02:00")
             // 02:10 - 23:59
-            return remoteRepository.getShortTermForecast(
+            return remoteRepository.fetchShortTermForecast(
                 baseDate = today,
                 baseTime = "0200",
                 numOfRows = Constants.TMN_TMX_2_NUM_OF_ROWS,
@@ -330,7 +355,7 @@ class WeatherViewModel(
         Log.d(TAG, "start fetchShortTermForecast")
         val availableDateTimePair = getAvailableForecastBaseDateTime()
         Log.d(TAG, "availableDateTimePair: ${availableDateTimePair}")
-        return remoteRepository.getShortTermForecast(
+        return remoteRepository.fetchShortTermForecast(
             baseDate = availableDateTimePair.first,
             baseTime = availableDateTimePair.second,
             numOfRows = Constants.FORECAST_NUM_OF_ROWS,

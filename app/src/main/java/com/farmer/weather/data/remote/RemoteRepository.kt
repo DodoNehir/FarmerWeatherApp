@@ -10,7 +10,7 @@ import com.farmer.weather.domain.ShortTermForecast
 import com.farmer.weather.util.Constants
 
 interface RemoteRepository {
-    suspend fun getShortTermForecast(
+    suspend fun fetchShortTermForecast(
         baseDate: Int,
         baseTime: String,
         numOfRows: Int,
@@ -18,7 +18,7 @@ interface RemoteRepository {
         ny: Int
     ): ApiResult<List<ShortTermForecast>>
 
-    suspend fun getNowCasting(
+    suspend fun fetchNowCasting(
         baseDate: Int,
         baseTime: String,
         nx: Int,
@@ -30,7 +30,7 @@ class RemoteRepositoryImpl(
     private val weatherApiService: WeatherApiService
 ) : RemoteRepository {
 
-    override suspend fun getShortTermForecast(
+    override suspend fun fetchShortTermForecast(
         baseDate: Int,
         baseTime: String,
         numOfRows: Int,
@@ -74,7 +74,7 @@ class RemoteRepositoryImpl(
 
     }
 
-    override suspend fun getNowCasting(
+    override suspend fun fetchNowCasting(
         baseDate: Int,
         baseTime: String,
         nx: Int,
