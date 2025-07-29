@@ -2,7 +2,8 @@ package com.farmer.weather.data.local
 
 class LocalRepositoryImpl(
     private val shortTermForecastDao: ShortTermForecastDao,
-    private val dailyTemperatureDao: DailyTemperatureDao
+    private val dailyTemperatureDao: DailyTemperatureDao,
+    private val nowCastingDao: NowCastingDao
 ) : LocalRepository {
 
     override suspend fun insertShortTermForecasts(forecasts: List<ShortTermForecastEntity>) =
@@ -41,4 +42,18 @@ class LocalRepositoryImpl(
     ): DailyTemperatureEntity? =
         dailyTemperatureDao.getDailyTemperature(date, nx, ny)
 
+
+    override suspend fun insertNowCasting(nowCastingEntity: NowCastingEntity) =
+        nowCastingDao.insertNowCasting(nowCastingEntity)
+
+    override suspend fun deleteNowCasting(oldDate: Int) =
+        nowCastingDao.deleteNowCasting(oldDate)
+
+    override suspend fun getNowCasting(
+        date: Int,
+        time: String,
+        nx: Int,
+        ny: Int
+    ): NowCastingEntity? =
+        nowCastingDao.getNowCasting(date, time, nx, ny)
 }

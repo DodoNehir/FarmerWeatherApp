@@ -1,7 +1,6 @@
 package com.farmer.weather.data
 
 import android.content.Context
-import android.util.Log.i
 import com.farmer.weather.data.local.LocalRepository
 import com.farmer.weather.data.local.LocalRepositoryImpl
 import com.farmer.weather.data.local.WeatherDatabase
@@ -17,7 +16,6 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import kotlin.apply
 
 interface AppContainer {
     val remoteRepository: RemoteRepository
@@ -60,7 +58,8 @@ class WeatherContainer(private val context: Context) : AppContainer {
     override val localRepository: LocalRepository by lazy {
         LocalRepositoryImpl(
             WeatherDatabase.getDatabase(context).shortTermForecastDao(),
-            WeatherDatabase.getDatabase(context).dailyTemperatureDao()
+            WeatherDatabase.getDatabase(context).dailyTemperatureDao(),
+            WeatherDatabase.getDatabase(context).nowCastingDao()
         )
     }
 

@@ -1,8 +1,10 @@
 package com.farmer.weather.domain
 
 data class NowCasting(
-    val baseDate: String,
+    val baseDate: Int,
     val baseTime: String,
+    val nx: Int,
+    val ny: Int,
     val temperature: Double,
     val rn1: String, // 1시간 강수량 : 강수없음 / 0 / 1mm 미만 / 6.9mm .. / 50.0mm 이상
     val humidity: Int,

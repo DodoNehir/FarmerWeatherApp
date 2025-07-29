@@ -6,14 +6,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [ShortTermForecastEntity::class, DailyTemperatureEntity::class],
-    version = 5,
+    entities = [ShortTermForecastEntity::class, DailyTemperatureEntity::class, NowCastingEntity::class],
+    version = 6,
     exportSchema = false
 )
 abstract class WeatherDatabase : RoomDatabase() {
 
     abstract fun shortTermForecastDao(): ShortTermForecastDao
     abstract fun dailyTemperatureDao(): DailyTemperatureDao
+    abstract fun nowCastingDao(): NowCastingDao
 
     companion object {
         @Volatile

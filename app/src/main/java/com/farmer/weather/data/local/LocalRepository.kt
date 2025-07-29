@@ -12,4 +12,9 @@ interface LocalRepository {
     suspend fun deleteDailyTemperature(oldDate: Int)
     suspend fun getDailyTemperature(date: Int, nx: Int, ny: Int): DailyTemperatureEntity?
 
+    // Nowcasting
+    suspend fun insertNowCasting(nowCastingEntity: NowCastingEntity)
+    suspend fun deleteNowCasting(oldDate: Int)
+    suspend fun getNowCasting(date: Int, time: String, nx: Int, ny: Int): NowCastingEntity?
+
 }
