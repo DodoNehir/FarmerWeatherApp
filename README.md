@@ -14,7 +14,7 @@ https://play.google.com/store/apps/details?id=com.farmer.weather
   
   
 ## 스크린샷
-![스크린샷](https://github.com/user-attachments/assets/901671f6-1564-4618-b6d7-49eb3ad83ed3)
+<img src="https://github.com/user-attachments/assets/901671f6-1564-4618-b6d7-49eb3ad83ed3" width="400">
   
   
 ## 기술 스택
