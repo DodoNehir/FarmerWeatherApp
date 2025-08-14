@@ -37,6 +37,7 @@ import com.farmer.weather.R
 import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.NowCasting
 import com.farmer.weather.domain.ShortTermForecast
+import com.farmer.weather.ui.viewmodel.WeatherUiState
 
 @Composable
 fun HomeScreen(

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.devtools.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.dagger.hilt)
 }
 
 android {
@@ -66,6 +67,11 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    // Hilt
+    implementation(libs.google.dagger.hilt)
+    ksp(libs.google.dagger.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 
     //Room
     implementation(libs.androidx.room.runtime)

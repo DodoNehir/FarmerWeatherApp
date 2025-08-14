@@ -1,16 +1,11 @@
-package com.farmer.weather.ui.screens
+package com.farmer.weather.ui.viewmodel
 
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.farmer.weather.WeatherApplication
 import com.farmer.weather.data.local.DailyTemperatureEntity
 import com.farmer.weather.data.local.LocalRepository
 import com.farmer.weather.data.local.NowCastingEntity
@@ -23,12 +18,15 @@ import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.NowCasting
 import com.farmer.weather.domain.ShortTermForecast
 import com.farmer.weather.util.Constants
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.collections.iterator
 
 
 sealed interface WeatherUiState {
@@ -47,8 +45,8 @@ sealed interface WeatherUiState {
     object Loading : WeatherUiState
 }
 
-
-class WeatherViewModel(
+@HiltViewModel
+class WeatherViewModel @Inject constructor(
     private val localRepository: LocalRepository,
     private val remoteRepository: RemoteRepository,
     private val locationRepository: LocationRepository
@@ -408,20 +406,20 @@ class WeatherViewModel(
     }
 
 
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val application = (this[APPLICATION_KEY] as WeatherApplication)
-                val localRepository = application.container.localRepository
-                val remoteRepository = application.container.remoteRepository
-                val locationRepository = application.container.locationRepository
-                WeatherViewModel(
-                    localRepository = localRepository,
-                    remoteRepository = remoteRepository,
-                    locationRepository = locationRepository
-                )
-            }
-        }
-    }
+//    companion object {
+//        val Factory: ViewModelProvider.Factory = viewModelFactory {
+//            initializer {
+//                val application = (this[APPLICATION_KEY] as WeatherApplication)
+//                val localRepository = application.container.localRepository
+//                val remoteRepository = application.container.remoteRepository
+//                val locationRepository = application.container.locationRepository
+//                WeatherViewModel(
+//                    localRepository = localRepository,
+//                    remoteRepository = remoteRepository,
+//                    locationRepository = locationRepository
+//                )
+//            }
+//        }
+//    }
 
 }

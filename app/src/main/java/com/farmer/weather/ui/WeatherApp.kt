@@ -12,8 +12,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import com.farmer.weather.ui.screens.WeatherViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.farmer.weather.ui.viewmodel.WeatherViewModel
 import com.farmer.weather.ui.screens.HomeScreen
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -23,7 +23,9 @@ import kotlin.properties.Delegates
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
-fun WeatherApp() {
+fun WeatherApp(
+    weatherViewModel: WeatherViewModel = hiltViewModel()
+) {
 //    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
     val TAG = "WeatherApp"
@@ -33,7 +35,7 @@ fun WeatherApp() {
         permission = Manifest.permission.ACCESS_FINE_LOCATION
     )
 
-    val weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModel.Factory)
+//    val weatherViewModel: WeatherViewModel = viewModel(factory = WeatherViewModel.Factory)
 
     LaunchedEffect(Unit) {
         // 처음 composition 될 때 한 번만 실행됨

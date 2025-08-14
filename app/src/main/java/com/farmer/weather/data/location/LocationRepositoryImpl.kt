@@ -4,12 +4,16 @@ import android.content.Context
 import android.location.Geocoder
 import android.util.Log
 import android.util.Log.e
+import dagger.hilt.android.qualifiers.ApplicationContext
+import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.Locale
 
-class LocationRepositoryImpl(private val context: Context) : LocationRepository {
+class LocationRepositoryImpl(
+    private val context: Context
+) : LocationRepository {
 
     private val TAG = "LocationRepositoryImpl"
 

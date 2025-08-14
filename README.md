@@ -22,7 +22,7 @@
 ## 기술 스택
 - **Language**: Kotlin
 - **UI**: Jetpack Compose
-- **Architecture**: MVVM
+- **Architecture**: MVVM + DI(Hilt)
 - **Data**: Room (Local DB), Retrofit(API)
 - **API**: 기상청 공공데이터 API
 
@@ -59,7 +59,6 @@ flowchart TD
 
 ## 개선 계획
 - 사용자 로그 수집 기능: Firebase Analytics를 활용하여 앱 사용 패턴 분석 및 개선 포인트 도출
-- 의존성 관리 최적화: Hilt를 적용해 DI 구조 정립
 - 테스트 코드 작성: JUnit5 기반 단위 테스트 및 UI 테스트 추
 - 지역 검색 및 즐겨찾기: Kakao Map API 활용, 원하는 지역의 날씨 조회 지원
 

@@ -1,14 +1,14 @@
 package com.farmer.weather
 
 import android.app.Application
-import com.farmer.weather.data.AppContainer
-import com.farmer.weather.data.WeatherContainer
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class WeatherApplication: Application() {
-    lateinit var container : AppContainer
+//    lateinit var container : AppContainer
 
-    override fun onCreate() {
-        super.onCreate()
-        container = WeatherContainer(this)
-    }
+//    override fun onCreate() {
+//        super.onCreate()
+//        container = WeatherContainer(this)
+//    }
 }
