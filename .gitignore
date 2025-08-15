@@ -23,3 +23,6 @@
 # Kotlin specific
 *.iml
 .idea/
+
+# Firebase config
+google-services.json

@@ -68,7 +68,7 @@ class WeatherViewModel @Inject constructor(
     private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm")
 
 //    init {
-//        loadData()
+//        throw RuntimeException("Test Crash")
 //    }
 
     // 위치 권한이 있는 한 lat, lon 은 not null

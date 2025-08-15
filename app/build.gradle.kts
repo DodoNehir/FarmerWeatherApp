@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.devtools.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.dagger.hilt)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -88,6 +90,11 @@ dependencies {
     // Location
     implementation(libs.android.gms.location)
     implementation(libs.google.accompanist.permissions)
+
+    // Firebase Crashlytics
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics.j)
 
     coreLibraryDesugaring(libs.android.desugar.jdk.libs)
 
