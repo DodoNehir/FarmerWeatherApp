@@ -1,6 +1,8 @@
 package com.farmer.weather.ui.viewmodel
 
 import android.util.Log
+import android.util.Log.e
+import androidx.compose.material3.DatePickerDefaults.dateFormatter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -18,6 +20,8 @@ import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.NowCasting
 import com.farmer.weather.domain.ShortTermForecast
 import com.farmer.weather.util.Constants
+import com.google.firebase.Firebase
+import com.google.firebase.crashlytics.crashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -78,8 +82,10 @@ class WeatherViewModel @Inject constructor(
             now = LocalDateTime.now()
             setLocation(lat, lon)
 
+            Firebase.crashlytics.log("[LOAD][START]")
             if (dongAddress != null) {
                 loadData()
+                Firebase.crashlytics.log("[LOAD][SUCCESS]")
 
                 // UI 가 성공적으로 올라간 뒤 작업 진행
                 if (weatherUiState is WeatherUiState.Success) {
@@ -87,6 +93,7 @@ class WeatherViewModel @Inject constructor(
                     cleanUpOldWeatherData()
                 }
             } else {
+                Firebase.crashlytics.log("[LOAD][FAIL]")
                 weatherUiState = WeatherUiState.Error
             }
         }
@@ -98,8 +105,8 @@ class WeatherViewModel @Inject constructor(
         val currentTime = now.format(timeFormatter)
         val nx = nxny.first
         val ny = nxny.second
-        var finalDailyTempEntity: DailyTemperatureEntity? = null
-        var finalNowCastingEntity: NowCastingEntity? = null
+        lateinit var finalDailyTempEntity: DailyTemperatureEntity
+        lateinit var finalNowCastingEntity: NowCastingEntity
 
         // 1. nowCasting
         val nowCastingDatePair = getAvailableNowCastingBaseDateTime()
@@ -112,27 +119,18 @@ class WeatherViewModel @Inject constructor(
 
         // 1-1. 없으면 nowcasting 요청, 저장
         if (nowCastingEntity == null) {
+            Firebase.crashlytics.log("[NowCasting][start request]")
             val nowCastingResult = remoteRepository.fetchNowCasting(
                 nowCastingDatePair.first,
                 nowCastingDatePair.second,
                 nx,
                 ny
             )
-            Log.d(TAG, "fetchNowCasting ApiResult: ${nowCastingResult.TAG}")
-            if (nowCastingResult !is ApiResult.Success) {
-                weatherUiState = mapToUiState(nowCastingResult)
-                return
+            handleApiResult("NowCasting", nowCastingResult) {
+                localRepository.insertNowCasting(it.toEntity())
+                finalNowCastingEntity = it.toEntity()
             }
-            localRepository.insertNowCasting(nowCastingResult.value.toEntity())
-
-            finalNowCastingEntity = localRepository.getNowCasting(
-                nowCastingDatePair.first,
-                nowCastingDatePair.second,
-                nx,
-                ny
-            )
-            if (finalNowCastingEntity == null) {
-                weatherUiState = WeatherUiState.Error
+            if (nowCastingResult !is ApiResult.Success) {
                 return
             }
         } else {
@@ -148,27 +146,31 @@ class WeatherViewModel @Inject constructor(
         // 2-1. 없으면 fetch
         if (dailyTemperatureEntity == null) {
             val minMaxResult = fetchDailyMinMax(nx, ny)
-            Log.d(TAG, "fetchDailyMinMax ApiResult: ${minMaxResult.TAG}")
-            if (minMaxResult !is ApiResult.Success) {
-                weatherUiState = mapToUiState(minMaxResult)
-                return
-            }
-            saveMinMax(minMaxResult.value)
 
-            // daily 가 없으면 forecast 도 없다는 뜻
-            val forecastResult = fetchShortTermForecast()
-            Log.d(TAG, "fetchShortTermForecast ApiResult: ${forecastResult.TAG}")
-            if (forecastResult !is ApiResult.Success) {
-                weatherUiState = mapToUiState(forecastResult)
-                return
-            }
-            saveForecast(forecastResult.value)
-
-            // 저장 후 다시 검색
-            finalDailyTempEntity = localRepository.getDailyTemperature(currentDate, nx, ny)
-            if (finalDailyTempEntity == null) {
-                Log.d(TAG, "should not occur. 정상 응답에 저장도 했지만, DB 검색 실패로 프로세스 종료")
+            try {
+                handleApiResult("DailyMinMax", minMaxResult) {
+                    finalDailyTempEntity = saveMinMax(it)
+                }
+            } catch (e: Exception) {
+                // 데이터 저장 중 문제
+                Log.e(TAG, "DailyMinMax save failed", e)
+                Firebase.crashlytics.recordException(e)
                 weatherUiState = WeatherUiState.Error
+                return
+            }
+
+            // api 요청 중 문제
+            if (minMaxResult !is ApiResult.Success) {
+                return
+            }
+
+            // daily 가 없으면 forecast 도 없을 테니 같이 요청함.
+            // min, max와는 달리 데이터가 들어왔다면 무조건 있을 정보들이므로 try catch가 필요없을 것으로 판단함
+            val forecastResult = fetchShortTermForecast()
+            handleApiResult("ShortTermForecast", forecastResult) {
+                saveForecast(it)
+            }
+            if (forecastResult !is ApiResult.Success) {
                 return
             }
 
@@ -181,6 +183,8 @@ class WeatherViewModel @Inject constructor(
         val shortTermForecastEntities =
             localRepository.getShortTermForecasts(currentDate, currentTime, nx, ny)
         if (shortTermForecastEntities.isEmpty()) {
+            Log.e(TAG, "getShortTermForecasts failed")
+            Firebase.crashlytics.recordException(Exception("getShortTermForecasts failed"))
             weatherUiState = WeatherUiState.Error
             return
         }
@@ -192,6 +196,34 @@ class WeatherViewModel @Inject constructor(
             dailyTemperature = finalDailyTempEntity.toDomain(),
             weatherList = shortTermForecastEntities.map { it.toDomain() },
         )
+    }
+
+    suspend fun <T> handleApiResult(
+        tag: String,
+        result: ApiResult<T>,
+        onSuccess: suspend (T) -> Unit
+    ) {
+        when (result) {
+            is ApiResult.Success -> {
+                Firebase.crashlytics.log("[$tag][SUCCESS]")
+                onSuccess(result.value)
+            }
+
+            is ApiResult.Error -> {
+                Firebase.crashlytics.log("[$tag][FAIL]")
+                result.exception?.let { e ->
+                    Log.e(TAG, "$tag Error", e)
+                    Firebase.crashlytics.recordException(e)
+                }
+                weatherUiState = mapToUiState(result)
+            }
+
+            is ApiResult.NoData -> {
+                Firebase.crashlytics.log("[$tag][NO DATA]")
+                Firebase.crashlytics.recordException(Exception("API result : NO DATA"))
+                weatherUiState = mapToUiState(result)
+            }
+        }
     }
 
 
@@ -268,7 +300,7 @@ class WeatherViewModel @Inject constructor(
         return storedDate.isBefore(now.minusHours(7L))
     }
 
-    suspend fun saveMinMax(result: List<ShortTermForecast>) {
+    suspend fun saveMinMax(result: List<ShortTermForecast>): DailyTemperatureEntity {
         val groupedByDate = result
             .filter { it.minTemperature != null || it.maxTemperature != null }
             .groupBy { it.fcstDate }
@@ -289,10 +321,11 @@ class WeatherViewModel @Inject constructor(
                 )
                 localRepository.insertDailyTemperature(dailyTemp.toEntity())
                 Log.d(TAG, "saved min, max fcstDate: ${fcstDate}")
-            } else {
-                Log.d(TAG, "While saving fcstDate: ${fcstDate} there's no value (min or max)")
+                return dailyTemp.toEntity()
             }
         }
+
+        throw IllegalStateException("No valid min/max temperature found")
     }
 
     suspend fun saveForecast(result: List<ShortTermForecast>) {
