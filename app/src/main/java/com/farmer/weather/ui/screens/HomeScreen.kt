@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -435,43 +436,47 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
 
 @Composable
 fun ErrorScreen(modifier: Modifier = Modifier) {
-    Column(
+    LazyColumn(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            painter = painterResource(R.drawable.cancel),
-            contentDescription = null,
-            modifier = Modifier.size(100.dp)
-        )
-        Text(
-            text = stringResource(R.string.error),
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(16.dp)
-        )
+        item {
+            Image(
+                painter = painterResource(R.drawable.cancel),
+                contentDescription = null,
+                modifier = Modifier.size(100.dp)
+            )
+            Text(
+                text = stringResource(R.string.error),
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
 
     }
 }
 
 @Composable
 fun NoDataScreen(modifier: Modifier = Modifier) {
-    Column(
+    LazyColumn(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            painter = painterResource(R.drawable.nodata),
-            contentDescription = null,
-            modifier = Modifier.size(100.dp)
-        )
-        Text(
-            text = stringResource(R.string.no_data),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(16.dp)
-        )
+        item {
+            Image(
+                painter = painterResource(R.drawable.nodata),
+                contentDescription = null,
+                modifier = Modifier.size(100.dp)
+            )
+            Text(
+                text = stringResource(R.string.no_data),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
 
     }
 }

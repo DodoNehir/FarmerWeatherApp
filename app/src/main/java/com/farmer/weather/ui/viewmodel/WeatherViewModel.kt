@@ -25,6 +25,7 @@ import com.google.firebase.crashlytics.crashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
@@ -60,6 +61,8 @@ class WeatherViewModel @Inject constructor(
 
     var weatherUiState: WeatherUiState by mutableStateOf(WeatherUiState.Loading)
         private set
+    var isRefreshing by mutableStateOf(false)
+        private set
 
     private var currentLat: Double = Constants.DEFAULT_LAT
     private var currentLon: Double = Constants.DEFAULT_LON
@@ -78,7 +81,6 @@ class WeatherViewModel @Inject constructor(
     // 위치 권한이 있는 한 lat, lon 은 not null
     fun startLoadWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
-            // startLoadWeather 마다 시간, 위치 업데이트
             now = LocalDateTime.now()
             setLocation(lat, lon)
 
@@ -95,6 +97,32 @@ class WeatherViewModel @Inject constructor(
             } else {
                 Firebase.crashlytics.log("[LOAD][FAIL]")
                 weatherUiState = WeatherUiState.Error
+            }
+        }
+    }
+
+    fun refreshWeather() {
+        viewModelScope.launch {
+            isRefreshing = true
+            weatherUiState = WeatherUiState.Loading
+            now = LocalDateTime.now()
+
+            Firebase.crashlytics.log("[REFRESH][START]")
+            if (dongAddress != null) {
+                loadData()
+                isRefreshing = false
+                Firebase.crashlytics.log("[REFRESH][SUCCESS]")
+
+                // UI 가 성공적으로 올라간 뒤 작업 진행
+                if (weatherUiState is WeatherUiState.Success) {
+                    updateForecastIfNeeded()
+                    cleanUpOldWeatherData()
+                }
+            } else {
+                Firebase.crashlytics.log("[REFRESH][FAIL]")
+                delay(1000L)
+                weatherUiState = WeatherUiState.Error
+                isRefreshing = false
             }
         }
     }
