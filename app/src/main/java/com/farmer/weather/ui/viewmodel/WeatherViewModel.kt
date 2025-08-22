@@ -2,6 +2,7 @@ package com.farmer.weather.ui.viewmodel
 
 import android.util.Log
 import android.util.Log.e
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.DatePickerDefaults.dateFormatter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,6 +29,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okio.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -101,27 +103,37 @@ class WeatherViewModel @Inject constructor(
         }
     }
 
-    fun refreshWeather() {
+    fun refreshWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
             isRefreshing = true
             weatherUiState = WeatherUiState.Loading
-            now = LocalDateTime.now()
 
-            Firebase.crashlytics.log("[REFRESH][START]")
-            if (dongAddress != null) {
-                loadData()
-                isRefreshing = false
-                Firebase.crashlytics.log("[REFRESH][SUCCESS]")
+            try {
+                setLocation(lat, lon)
+                now = LocalDateTime.now()
 
-                // UI 가 성공적으로 올라간 뒤 작업 진행
-                if (weatherUiState is WeatherUiState.Success) {
-                    updateForecastIfNeeded()
-                    cleanUpOldWeatherData()
+                Firebase.crashlytics.log("[REFRESH][START]")
+                if (dongAddress != null) {
+                    loadData()
+                    Firebase.crashlytics.log("[REFRESH][SUCCESS]")
+
+                    // UI 가 성공적으로 올라간 뒤 작업 진행
+                    if (weatherUiState is WeatherUiState.Success) {
+                        updateForecastIfNeeded()
+                        cleanUpOldWeatherData()
+                    }
+                } else {
+                    Firebase.crashlytics.log("[REFRESH][FAIL]")
+                    weatherUiState = WeatherUiState.Error
                 }
-            } else {
-                Firebase.crashlytics.log("[REFRESH][FAIL]")
-                delay(1000L)
+
+            } catch (e: IOException) {
+                Firebase.crashlytics.recordException(e)
+                Log.e(TAG, "refresh error: $e")
                 weatherUiState = WeatherUiState.Error
+                Firebase.crashlytics.log("[REFRESH][EXCEPTION]")
+            } finally {
+                delay(1000L)
                 isRefreshing = false
             }
         }
@@ -367,12 +379,13 @@ class WeatherViewModel @Inject constructor(
      * 주소명, nx ny 값
      */
     suspend fun setLocation(lat: Double, lon: Double) {
-        if (currentLat == lat && currentLon == lon) return
+//        if (currentLat == lat && currentLon == lon) return
         currentLat = lat
         currentLon = lon
 
         dongAddress = locationRepository.getAddress(lat, lon)
         Log.d(TAG, "dongAddress: $dongAddress")
+
         nxny = locationRepository.convertToNxNy(lat, lon)
         Log.d(TAG, "nx: ${nxny.first}   ny: ${nxny.second}")
     }

@@ -89,7 +89,17 @@ fun WeatherApp(
             modifier = Modifier.fillMaxSize()
         ) {
             val isRefreshing = weatherViewModel.isRefreshing
-            val onRefresh: () -> Unit = { weatherViewModel.refreshWeather() }
+            val onRefresh: () -> Unit = {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    if (location != null) {
+                        Log.d(TAG, "refresh weather")
+                        weatherViewModel.refreshWeather(location.latitude, location.longitude)
+                    } else {
+                        Log.d(TAG, "refresh weather : 36.5050, 127.2655")
+                        weatherViewModel.refreshWeather(36.5050, 127.2655)
+                    }
+                }
+            }
 
             PullToRefreshBox(
                 modifier = Modifier.fillMaxSize(),

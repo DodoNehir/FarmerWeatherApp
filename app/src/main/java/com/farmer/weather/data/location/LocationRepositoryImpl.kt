@@ -19,29 +19,32 @@ class LocationRepositoryImpl(
 
     override suspend fun getAddress(lat: Double, lon: Double): String? {
 
+        // 실패하면 그대로 예외를 올리도록 try-catch 삭제
         return withContext(Dispatchers.IO) {
-            try {
-                val geocoder = Geocoder(context, Locale.getDefault())
-                val addresses = geocoder.getFromLocation(lat, lon, 1)
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addresses = geocoder.getFromLocation(lat, lon, 1)
 
-                // admin 대구광역시  subLocality 수성구 thoroughfare=신매동
-                // addressLines=[0:"대한민국 대구광역시 수성구 신매동 364-1"]
-                if (addresses?.first() != null) {
-                    val adr = addresses.first()
-                    Log.d(TAG, "get address from lat, lon: ${adr}")
-                    // 순서대로 가장 작은 행정구역을 우선 반환함
-                    if (adr.thoroughfare != null) {
-                        return@withContext adr.thoroughfare
-                    } else if (adr.subLocality != null) {
-                        return@withContext adr.subLocality
-                    }
+            // admin 대구광역시  subLocality 수성구 thoroughfare=신매동
+            // addressLines=[0:"대한민국 대구광역시 수성구 신매동 364-1"]
+            val adr = addresses?.firstOrNull()
+            Log.d(TAG, "get address from lat, lon: ${adr}")
+
+            // 순서대로 가장 작은 행정구역을 우선 반환
+            val direct = adr?.thoroughfare ?: adr?.subLocality
+            if (direct != null) return@withContext direct
+
+            // Geocoder는 내부적으로 기기/제조사/구글 플레이 서비스/네트워크 상태에 따라 다른 소스를 사용함
+            // + 구글의 주소 데이터는 수시로 업데이트
+            // 그래서 필드 매핑이 null 될 수도 있으므로 직접 파싱
+            val line = adr?.getAddressLine(0)
+            line?.split(" ")
+                ?.firstOrNull {
+                    it.endsWith("동") || it.endsWith("읍") ||
+                            it.endsWith("면") || it.endsWith("리")
                 }
-                null
-            } catch (e: IOException) {
-                null
-            }
         }
     }
+
 
     override fun convertToNxNy(
         lat: Double,
