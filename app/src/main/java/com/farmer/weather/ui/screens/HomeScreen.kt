@@ -121,7 +121,8 @@ fun CurrentHighlightCard(
     dailyTemp: DailyTemperature,
 ) {
     Card(
-        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+        modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
             modifier = Modifier
@@ -199,7 +200,7 @@ fun CurrentHighlightCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "풍속 ${nowCasting.windSpeed}m/s"
+                    text = "${nowCasting.windSpeed}m/s"
                 )
             }
         }

@@ -21,7 +21,7 @@ class LocationRepositoryImpl(
 
         // 실패하면 그대로 예외를 올리도록 try-catch 삭제
         return withContext(Dispatchers.IO) {
-            val geocoder = Geocoder(context, Locale.getDefault())
+            val geocoder = Geocoder(context, Locale.KOREA)
             val addresses = geocoder.getFromLocation(lat, lon, 1)
 
             // admin 대구광역시  subLocality 수성구 thoroughfare=신매동

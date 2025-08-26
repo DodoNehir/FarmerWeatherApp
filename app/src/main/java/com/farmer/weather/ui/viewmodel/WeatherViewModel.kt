@@ -83,22 +83,29 @@ class WeatherViewModel @Inject constructor(
     // 위치 권한이 있는 한 lat, lon 은 not null
     fun startLoadWeather(lat: Double, lon: Double) {
         viewModelScope.launch {
-            now = LocalDateTime.now()
-            setLocation(lat, lon)
+            try {
+                now = LocalDateTime.now()
+                setLocation(lat, lon)
 
-            Firebase.crashlytics.log("[LOAD][START]")
-            if (dongAddress != null) {
-                loadData()
-                Firebase.crashlytics.log("[LOAD][SUCCESS]")
+                Firebase.crashlytics.log("[LOAD][START]")
+                if (dongAddress != null) {
+                    loadData()
+                    Firebase.crashlytics.log("[LOAD][SUCCESS]")
 
-                // UI 가 성공적으로 올라간 뒤 작업 진행
-                if (weatherUiState is WeatherUiState.Success) {
-                    updateForecastIfNeeded()
-                    cleanUpOldWeatherData()
+                    // UI 가 성공적으로 올라간 뒤 작업 진행
+                    if (weatherUiState is WeatherUiState.Success) {
+                        updateForecastIfNeeded()
+                        cleanUpOldWeatherData()
+                    }
+                } else {
+                    Firebase.crashlytics.log("[LOAD][FAIL]")
+                    weatherUiState = WeatherUiState.Error
                 }
-            } else {
-                Firebase.crashlytics.log("[LOAD][FAIL]")
+            } catch (e: IOException) {
+                Firebase.crashlytics.recordException(e)
+                Log.e(TAG, "refresh error: $e")
                 weatherUiState = WeatherUiState.Error
+                Firebase.crashlytics.log("[REFRESH][EXCEPTION]")
             }
         }
     }
