@@ -87,6 +87,10 @@ dependencies {
     implementation(libs.squareup.okhttp3.interceptor)
     implementation(libs.jetbrains.kotlinx.serialization)
 
+    // Coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
+
     // Location
     implementation(libs.android.gms.location)
     implementation(libs.google.accompanist.permissions)
