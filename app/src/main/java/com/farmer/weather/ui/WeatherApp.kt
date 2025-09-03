@@ -1,23 +1,44 @@
 package com.farmer.weather.ui
 
 import android.Manifest
+import android.R.attr.top
 import android.os.Build
 import android.util.Log
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.farmer.weather.ui.screens.HomeScreen
+import com.farmer.weather.ui.screens.RadarScreen
+import com.farmer.weather.ui.screens.WeatherInfoScreen
+import com.farmer.weather.ui.viewmodel.WeatherUiState
 import com.farmer.weather.ui.viewmodel.WeatherViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -82,35 +103,62 @@ fun WeatherApp(
 //    LaunchedEffect(weatherViewModel.weatherUiState) {
 //    }
 
+    val onRefresh: () -> Unit = {
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                Log.d(TAG, "refresh weather")
+                weatherViewModel.refreshWeather(location.latitude, location.longitude)
+            } else {
+                Log.d(TAG, "refresh weather : 36.5050, 127.2655")
+                weatherViewModel.refreshWeather(36.5050, 127.2655)
+            }
+        }
+    }
+    val isRefreshing = weatherViewModel.isRefreshing
+    val navController = rememberNavController()
+    val startDestination = WeatherScreen.INFO
+    var selectedDestination by rememberSaveable { mutableIntStateOf(startDestination.ordinal) }
+
     Scaffold(
-//        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
     ) { innerPadding ->
         Surface(
             modifier = Modifier.fillMaxSize()
         ) {
-            val isRefreshing = weatherViewModel.isRefreshing
-            val onRefresh: () -> Unit = {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        Log.d(TAG, "refresh weather")
-                        weatherViewModel.refreshWeather(location.latitude, location.longitude)
-                    } else {
-                        Log.d(TAG, "refresh weather : 36.5050, 127.2655")
-                        weatherViewModel.refreshWeather(36.5050, 127.2655)
+            Column(modifier = Modifier.fillMaxSize()) {
+
+                PrimaryTabRow(
+                    selectedTabIndex = selectedDestination,
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
+                ) {
+                    WeatherScreen.entries.forEachIndexed { index, destination ->
+                        Tab(
+                            selected = selectedDestination == index,
+                            onClick = {
+                                navController.navigate(route = destination.route)
+                                selectedDestination = index
+                            },
+                            text = {
+                                Text(
+                                    text = destination.label,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            })
                     }
                 }
-            }
-
-            PullToRefreshBox(
-                modifier = Modifier.fillMaxSize(),
-                isRefreshing = isRefreshing,
-                onRefresh = onRefresh,
-            ) {
-                HomeScreen(
+                PullToRefreshBox(
                     modifier = Modifier.fillMaxSize(),
-                    weatherUiState = weatherViewModel.weatherUiState,
-                    contentPadding = innerPadding,
-                )
+                    isRefreshing = isRefreshing,
+                    onRefresh = onRefresh,
+                ) {
+                    HomeScreen(
+                        navController = navController,
+                        startDestination = startDestination,
+                        modifier = Modifier.fillMaxSize(),
+                        weatherUiState = weatherViewModel.weatherUiState,
+                    )
+                }
+
             }
 
         }
@@ -124,4 +172,15 @@ fun isRunningOnEmulator(): Boolean {
             || Build.DEVICE.contains("generic")
             || Build.HARDWARE.contains("ranchu") // 신형 에뮬
             || Build.HARDWARE.contains("goldfish") // 구형 에뮬
+}
+
+enum class WeatherScreen(
+    val route: String,
+    val label: String,
+    val icon: ImageVector,
+    val contentDescription: String
+) {
+    // TODO Icon 찾기
+    INFO("Info", "날씨", Icons.Default.Info, "시간대별 날씨"),
+    RADAR("Radar", "레이더", Icons.Default.Place, "레이더 분포도 조회")
 }

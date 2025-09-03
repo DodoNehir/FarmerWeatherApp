@@ -34,27 +34,47 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import com.farmer.weather.R
 import com.farmer.weather.domain.DailyTemperature
 import com.farmer.weather.domain.NowCasting
 import com.farmer.weather.domain.ShortTermForecast
+import com.farmer.weather.ui.WeatherScreen
 import com.farmer.weather.ui.viewmodel.WeatherUiState
 
 @Composable
 fun HomeScreen(
+    navController: NavHostController,
+    startDestination: WeatherScreen,
     modifier: Modifier = Modifier,
     weatherUiState: WeatherUiState,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     when (weatherUiState) {
-        is WeatherUiState.Success -> WeatherInfoScreen(
-            modifier = modifier,
-            dongAddress = weatherUiState.dongAddress,
-            nowCasting = weatherUiState.nowCasting,
-            dailyTemp = weatherUiState.dailyTemperature,
-            shortTermList = weatherUiState.weatherList,
-            contentPadding = contentPadding,
-        )
+        is WeatherUiState.Success -> NavHost(
+            navController,
+            startDestination = startDestination.route
+        ) {
+            WeatherScreen.entries.forEach { destination ->
+                composable(destination.route) {
+                    when (destination) {
+                        WeatherScreen.INFO -> WeatherInfoScreen(
+                            modifier = modifier,
+                            dongAddress = weatherUiState.dongAddress,
+                            nowCasting = weatherUiState.nowCasting,
+                            dailyTemp = weatherUiState.dailyTemperature,
+                            shortTermList = weatherUiState.weatherList,
+                            contentPadding = contentPadding,
+                        )
+
+                        WeatherScreen.RADAR -> RadarScreen()
+                    }
+                }
+            }
+        }
+
 
         is WeatherUiState.NoData -> NoDataScreen(
             modifier = modifier.padding(contentPadding)
