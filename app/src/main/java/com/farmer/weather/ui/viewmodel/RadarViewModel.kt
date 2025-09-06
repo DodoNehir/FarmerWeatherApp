@@ -1,35 +1,40 @@
 package com.farmer.weather.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @HiltViewModel
-class RadarViewModel @Inject constructor(): ViewModel() {
-    private val _imageUrl = MutableStateFlow("")
-    val imageUrl: StateFlow<String> = _imageUrl
+class RadarViewModel @Inject constructor() : ViewModel() {
+//    private val _imageUrl = MutableStateFlow("")
+//    val imageUrl: StateFlow<String> = _imageUrl
 
-    val formatter = DateTimeFormatter.ofPattern("yyyyMMddHHm0")
+    val formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm")
 
-    init {
-//        viewModelScope.launch {
-//            while(isActive) {
-                loadLatestUrl()
-                // TODO delay??
-//            }
-//        }
+    fun radarUrlFlow(): Flow<String> = flow {
+        while (true) {
+            emit(createUrl())
+            delay(5 * 60 * 1000L) // 5분마다
+        }
     }
 
-    private fun loadLatestUrl() {
+    private fun createUrl(): String {
         val now = LocalDateTime.now()
-        val fileName = now.minusMinutes(10L).format(formatter)
-        _imageUrl.value = "https://www.kma.go.kr/repositary/image/rdr/img/RDR_CMP_WRC_${fileName}.png"
+
+        val radarTime = now
+            .minusMinutes(10L)
+            .let { it.withMinute(it.minute / 10 * 10) }
+            .format(formatter)
+
+        val fileName = "https://www.kma.go.kr/repositary/image/rdr/img/RDR_CMP_WRC_${radarTime}.png"
+        Log.d("RadarViewModel", "image URL: ${fileName}")
+
+        return fileName
     }
 }
