@@ -1,9 +1,6 @@
 package com.farmer.weather.ui.viewmodel
 
 import android.util.Log
-import android.util.Log.e
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material3.DatePickerDefaults.dateFormatter
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -33,7 +30,6 @@ import okio.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.collections.iterator
 
 
 sealed interface WeatherUiState {

@@ -118,6 +118,7 @@ fun WeatherApp(
     val navController = rememberNavController()
     val startDestination = WeatherScreen.INFO
     var selectedDestination by rememberSaveable { mutableIntStateOf(startDestination.ordinal) }
+    val weatherUiState = weatherViewModel.weatherUiState
 
     Scaffold(
     ) { innerPadding ->
@@ -126,26 +127,29 @@ fun WeatherApp(
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
 
-                PrimaryTabRow(
-                    selectedTabIndex = selectedDestination,
-                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
-                ) {
-                    WeatherScreen.entries.forEachIndexed { index, destination ->
-                        Tab(
-                            selected = selectedDestination == index,
-                            onClick = {
-                                navController.navigate(route = destination.route)
-                                selectedDestination = index
-                            },
-                            text = {
-                                Text(
-                                    text = destination.label,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            })
+                if (weatherUiState is WeatherUiState.Success) {
+                    PrimaryTabRow(
+                        selectedTabIndex = selectedDestination,
+                        modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
+                    ) {
+                        WeatherScreen.entries.forEachIndexed { index, destination ->
+                            Tab(
+                                selected = selectedDestination == index,
+                                onClick = {
+                                    navController.navigate(route = destination.route)
+                                    selectedDestination = index
+                                },
+                                text = {
+                                    Text(
+                                        text = destination.label,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                })
+                        }
                     }
                 }
+
                 PullToRefreshBox(
                     modifier = Modifier.fillMaxSize(),
                     isRefreshing = isRefreshing,
