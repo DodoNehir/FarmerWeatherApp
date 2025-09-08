@@ -69,7 +69,7 @@ fun HomeScreen(
                             contentPadding = contentPadding,
                         )
 
-                        WeatherScreen.RADAR -> RadarScreen()
+                        WeatherScreen.RADAR -> RadarScreen(modifier = Modifier.fillMaxSize())
                     }
                 }
             }

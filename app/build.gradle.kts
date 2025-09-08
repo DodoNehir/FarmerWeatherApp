@@ -100,6 +100,8 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics.j)
 
+    implementation(libs.zoomable)
+
     coreLibraryDesugaring(libs.android.desugar.jdk.libs)
 
     testImplementation(libs.junit)
