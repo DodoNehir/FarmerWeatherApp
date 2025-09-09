@@ -4,6 +4,7 @@ import android.Manifest
 import android.R.attr.top
 import android.os.Build
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -28,6 +30,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -123,50 +129,60 @@ fun WeatherApp(
 
     Scaffold(
     ) { innerPadding ->
-        Surface(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Column(modifier = Modifier.fillMaxSize()) {
 
-                if (weatherUiState is WeatherUiState.Success) {
-                    PrimaryTabRow(
-                        selectedTabIndex = selectedDestination,
-                        modifier = Modifier.padding(top = innerPadding.calculateTopPadding())
-                    ) {
-                        WeatherScreen.entries.forEachIndexed { index, destination ->
-                            Tab(
-                                selected = selectedDestination == index,
-                                onClick = {
-                                    navController.navigate(route = destination.route)
-                                    selectedDestination = index
-                                },
-                                text = {
-                                    Text(
-                                        text = destination.label,
-                                        maxLines = 2,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                })
-                        }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color(0xFF23395B), Color(0xFF56719A)),
+                        start = Offset.Zero,
+                        end = Offset.Infinite
+                    ),
+                )
+        ) {
+
+            if (weatherUiState is WeatherUiState.Success) {
+                PrimaryTabRow(
+                    selectedTabIndex = selectedDestination,
+                    modifier = Modifier.padding(top = innerPadding.calculateTopPadding()),
+                    containerColor = Color.Transparent,
+                    contentColor = LocalContentColor.current
+                ) {
+                    WeatherScreen.entries.forEachIndexed { index, destination ->
+                        Tab(
+                            selected = selectedDestination == index,
+                            onClick = {
+                                navController.navigate(route = destination.route)
+                                selectedDestination = index
+                            },
+                            text = {
+                                Text(
+                                    text = destination.label,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            })
                     }
                 }
+            }
 
-                PullToRefreshBox(
+            PullToRefreshBox(
+                modifier = Modifier.fillMaxSize(),
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+            ) {
+                HomeScreen(
+                    navController = navController,
+                    startDestination = startDestination,
                     modifier = Modifier.fillMaxSize(),
-                    isRefreshing = isRefreshing,
-                    onRefresh = onRefresh,
-                ) {
-                    HomeScreen(
-                        navController = navController,
-                        startDestination = startDestination,
-                        modifier = Modifier.fillMaxSize(),
-                        weatherUiState = weatherViewModel.weatherUiState,
-                    )
-                }
-
+                    weatherUiState = weatherViewModel.weatherUiState,
+                )
             }
 
         }
+
+
     }
 }
 
