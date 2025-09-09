@@ -210,13 +210,13 @@ fun CurrentHighlightCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row {
-                val isDark = isSystemInDarkTheme()
-                val arrowColor = if (isDark) Color.White else Color.Black
+//                val isDark = isSystemInDarkTheme()
+//                val arrowColor = if (isDark) Color.White else Color.Black
                 Image(
                     painterResource(R.drawable.baseline_arrow_upward_24),
                     contentDescription = "wind direction",
                     modifier = Modifier.rotate(nowCasting.windDirection.toFloat()),
-                    colorFilter = ColorFilter.tint(arrowColor)
+                    colorFilter = ColorFilter.tint(Color.White)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
