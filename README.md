@@ -1,20 +1,24 @@
 # Farmer Weather App ☀️
 
-공공데이터포털의 기상청 단기예보 Open API를 활용하여 현재 위치 기반 실시간 날씨 정보를 제공하는 안드로이드 앱입니다.
+기상청 단기예보 Open API를 활용하여 날씨 정보를 제공하는 안드로이드 앱입니다.
+시니어를 대상으로 생각해 폰트가 약간 큽니다.
 
 <br>
   
 ## 주요 기능
 - 현재 위치 기반 날씨 표시
-- 다크모드 지원
 - 강수량 표시
+- 강수 레이더 확인
 
 <br>
 
 ## 스크린샷
-<img src="https://github.com/user-attachments/assets/901671f6-1564-4618-b6d7-49eb3ad83ed3" width="300" />
-<img src="https://github.com/user-attachments/assets/d2a50508-6931-43a9-bc59-4b00057aeafe" width="300" />
-<img src="https://github.com/user-attachments/assets/5c65f005-09ce-475a-bed7-ffa7af4c28b9" width="300" />
+<div style="width: 100%; overflow-x: auto; white-space: nowrap; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
+  <img src="https://github.com/user-attachments/assets/04264140-0333-48bc-bc56-60ebe47519f2" width="300" style="margin-right: 10px;"/>
+  <img src="https://github.com/user-attachments/assets/b8db9c35-da20-4bc8-8b09-083128346af7" width="300" style="margin-right: 10px;"/>
+  <img src="https://github.com/user-attachments/assets/a3a429c0-848e-49cc-8840-71d626361011" width="300" style="margin-right: 10px;"/>
+  <img src="https://github.com/user-attachments/assets/4f50c090-54b0-440e-a05a-43637d7a15ab" width="300" style="margin-right: 10px;"/>
+</div>
 
 <br>
 <br>
