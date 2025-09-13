@@ -1,35 +1,35 @@
 # Farmer Weather App ☀️
 
-기상청 단기예보 Open API를 활용하여 날씨 정보를 제공하는 안드로이드 앱입니다.
-시니어를 대상으로 생각해 폰트가 약간 큽니다.
+농업 종사자를 위한 날씨 앱입니다
+특히 시니어 사용자를 고려해 큰 글씨와 단순 UI를 적용했습니다
 
 <br>
   
 ## 주요 기능
-- 현재 위치 기반 날씨 표시
-- 강수량 표시
-- 강수 레이더 확인
+- 현재 위치 기반 날씨 표시: GPS로 사용자 입력 없이 날씨 확인
+- 강수량 및 레이더 시각화: 강수량이 농업에서 중요한 경우가 많으니 시간대별 강수확률과 예상 강우량을 함께 표시함
+- 시니어 친화 UI: 큰 글씨, 단순한 탭으로 접근성 강화
 
 <br>
 
 ## 스크린샷
-<div style="width: 100%; overflow-x: auto; white-space: nowrap; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
-  <img src="https://github.com/user-attachments/assets/04264140-0333-48bc-bc56-60ebe47519f2" width="300" style="margin-right: 10px;"/>
-  <img src="https://github.com/user-attachments/assets/b8db9c35-da20-4bc8-8b09-083128346af7" width="300" style="margin-right: 10px;"/>
-  <img src="https://github.com/user-attachments/assets/a3a429c0-848e-49cc-8840-71d626361011" width="300" style="margin-right: 10px;"/>
-  <img src="https://github.com/user-attachments/assets/4f50c090-54b0-440e-a05a-43637d7a15ab" width="300" style="margin-right: 10px;"/>
-</div>
+<p float="left">
+  <img src="https://github.com/user-attachments/assets/04264140-0333-48bc-bc56-60ebe47519f2" width="200"/>
+  <img src="docs/demo.gif" width="200"/>
+</p>
 
 <br>
 <br>
 
 ## 기술 스택
-- **Language**: Kotlin
-- **UI**: Jetpack Compose
-- **Architecture**: MVVM + DI(Hilt)
-- **Data**: Room (Local DB), Retrofit(API)
-- **API**: 기상청 공공데이터 API
-- **Crash Reporting**: Firebase Crashlytics
+| 분야            | 기술                        | 비고/도입 이유            |
+|-----------------|-----------------------------|---------------------|
+| **Language**    | Kotlin                      | Android 공식 언어       |
+| **UI**          | Jetpack Compose             | 최신 UI 적용, 코드량 절감    |
+| **Architecture**| MVVM + Hilt (DI)            | 책임 분배, 테스트 용이       |
+| **Data**        | Room (Local DB), Retrofit   | 네트워크 비용 절감, 오프라인 지원 |
+| **API**         | 기상청 공공데이터 API       | 무료, 실생활 사용          |
+| **Crash Report**| Firebase Crashlytics        | 무료, 오류 모니터링 및 개선    |
 
 <br>
 
@@ -80,3 +80,6 @@ flowchart TD
 - error icon: [Flaticon](https://www.flaticon.com/free-icons/cross)
 - nodata icon: [Flaticon](https://www.flaticon.com/free-icons/cancel)
 
+<br>
+
+> 사용자 경험을 개선하고 안정적인 앱 개발에 중점을 두고자 합니다
