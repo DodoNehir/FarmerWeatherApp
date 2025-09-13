@@ -69,9 +69,11 @@ flowchart TD
 <br>
 
 ## 확인 방법
-현재 Google Play 비공개 테스트 단계입니다.
-테스터로 등록된 계정만 설치 가능합니다.
-[비공개 테스트 앱 링크](https://play.google.com/store/apps/details?id=com.farmer.weather)
+[GitHub Release 에서 APK 다운로드](https://github.com/DodoNehir/FarmerWeatherApp/releases/tag/v1.0.0)
+- 설치 시 알 수 없는 출처 허용 필요할 수 있음
+
+※ 참고: Google Play 비공개 테스트 단계도 진행중
+[테스터로 등록된 계정만 설치 가능](https://play.google.com/store/apps/details?id=com.farmer.weather)
 
 <br>
 
@@ -82,4 +84,4 @@ flowchart TD
 
 <br>
 
-> 사용자 경험을 개선하고 안정적인 앱 개발에 중점을 두고자 합니다
+### **사용자 경험을 개선하고 안정적인 앱 개발에 중점을 두고자 합니다**

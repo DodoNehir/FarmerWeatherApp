@@ -19,6 +19,7 @@
 *.aar
 *.ap_
 *.so
+app/release/
 
 # Kotlin specific
 *.iml
